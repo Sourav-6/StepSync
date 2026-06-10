@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "203811495171",
+    "project_id": "stepsync-21a5d",
+    "storage_bucket": "stepsync-21a5d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:203811495171:android:f74c3cc4def4be0d28dd36",
+        "android_client_info": {
+          "package_name": "com.stepsync.step_sync"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "203811495171-qi9l59juse34j5he9ksha82rhrgj05ms.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVRRz6LEzyioX-FSw_pMkSpXfXNqXkBoc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "203811495171-qi9l59juse34j5he9ksha82rhrgj05ms.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

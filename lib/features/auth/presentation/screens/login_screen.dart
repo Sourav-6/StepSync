@@ -39,12 +39,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await ref.read(currentUserProvider.notifier).signInWithEmail(
+      final user = await ref.read(currentUserProvider.notifier).signInWithEmail(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
       if (mounted) {
-        context.go('/otp', extra: {'isLinking': true});
+        if (user.phone.isNotEmpty && user.phoneVerified) {
+          context.go('/home');
+        } else {
+          context.go('/otp', extra: {'isLinking': true});
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -58,9 +62,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      await ref.read(currentUserProvider.notifier).signInWithGoogle();
+      final user = await ref.read(currentUserProvider.notifier).signInWithGoogle();
       if (mounted) {
-        context.go('/otp', extra: {'isLinking': true});
+        if (user.phone.isNotEmpty && user.phoneVerified) {
+          context.go('/home');
+        } else {
+          context.go('/otp', extra: {'isLinking': true});
+        }
       }
     } catch (e) {
       if (mounted) {

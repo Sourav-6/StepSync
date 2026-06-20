@@ -193,6 +193,10 @@ class AuthRemoteDataSource {
             email: currentUser.email ?? '',
             phone: currentUser.phoneNumber ?? '',
           );
+        } else if (e.code == 'credential-already-in-use') {
+          // If the phone number is already linked to another account,
+          // sign in directly to that existing account using the phone credential.
+          userCredential = await _firebaseAuth.signInWithCredential(credential);
         } else {
           rethrow;
         }

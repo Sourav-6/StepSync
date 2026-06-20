@@ -29,6 +29,10 @@ class FirebaseErrorParser {
       return 'This login method is not enabled.';
     } else if (errorString.contains('network-request-failed')) {
       return 'Network error. Please check your internet connection.';
+    } else if (errorString.contains('credential-already-in-use')) {
+      return 'This phone number is already associated with another account.';
+    } else if (errorString.contains('provider-already-linked')) {
+      return 'This account is already linked to a phone number.';
     }
 
     // Default fallback
@@ -57,6 +61,10 @@ class FirebaseErrorParser {
         return 'This login method is not enabled.';
       case 'network-request-failed':
         return 'Network error. Please check your internet connection.';
+      case 'credential-already-in-use':
+        return 'This phone number is already associated with another account.';
+      case 'provider-already-linked':
+        return 'This account is already linked to a phone number.';
       default:
         return 'An error occurred during authentication. Please try again.';
     }

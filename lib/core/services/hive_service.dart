@@ -18,6 +18,8 @@ class HiveService {
   static const String keyNotifications = 'notifications_enabled';
   static const String keyOnboardingComplete = 'onboarding_complete';
   static const String keyLastSyncDate = 'last_sync_date';
+  static const String keyLastSensorSteps = 'last_sensor_steps';
+  static const String keyLastSensorTime = 'last_sensor_time';
 
   static bool _initialized = false;
 
@@ -89,6 +91,18 @@ class HiveService {
   /// Get cached step count for a date.
   static int getCachedSteps(String date) =>
       steps.get(date, defaultValue: 0);
+
+  /// Get last raw sensor steps.
+  static int? get lastSensorSteps => steps.get(keyLastSensorSteps) as int?;
+
+  /// Get last raw sensor time (milliseconds since epoch).
+  static int? get lastSensorTime => steps.get(keyLastSensorTime) as int?;
+
+  /// Save last raw sensor steps and timestamp.
+  static Future<void> saveLastSensorData(int stepsVal, int timeMs) async {
+    await steps.put(keyLastSensorSteps, stepsVal);
+    await steps.put(keyLastSensorTime, timeMs);
+  }
 
   // ─── User Cache ───
 

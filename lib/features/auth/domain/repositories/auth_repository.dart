@@ -23,6 +23,7 @@ abstract class AuthRepository {
     required String name,
     required String email,
     required String password,
+    String? referralCode,
   });
 
   /// Sign in with phone number (sends OTP).
@@ -30,6 +31,7 @@ abstract class AuthRepository {
     required String phoneNumber,
     required Function(String verificationId) onCodeSent,
     required Function(String error) onError,
+    Function(UserEntity user)? onVerificationCompleted,
   });
 
   /// Verify OTP for phone authentication.
@@ -56,4 +58,7 @@ abstract class AuthRepository {
 
   /// Delete user account.
   Future<void> deleteAccount();
+
+  /// Get users referred by a specific user uid.
+  Future<List<UserEntity>> getReferredUsers(String uid);
 }

@@ -2,17 +2,17 @@ import 'package:step_sync/features/steps/domain/entities/daily_steps_entity.dart
 
 /// Abstract repository interface for step tracking operations.
 abstract class StepsRepository {
-  /// Get a stream of real-time step count.
-  Stream<int> get stepCountStream;
+  /// Check if Health Connect is available.
+  Future<bool> checkHealthConnectAvailable();
 
-  /// Get pedestrian status stream.
-  Stream<String> get pedestrianStatusStream;
+  /// Prompt to install Health Connect.
+  Future<void> promptInstallHealthConnect();
 
-  /// Check if pedometer is available.
-  bool get isPedometerAvailable;
+  /// Check and request Health Connect permissions.
+  Future<bool> checkAndRequestPermissions();
 
-  /// Initialize pedometer tracking.
-  Future<void> initializePedometer({int cachedStepsToday = 0});
+  /// Fetch today's steps from Health Connect.
+  Future<int> fetchTodaySteps();
 
   /// Save daily step data to Firestore.
   Future<void> saveDailySteps({
@@ -49,6 +49,6 @@ abstract class StepsRepository {
   /// Set daily step goal.
   Future<void> setDailyGoal(int goal);
 
-  /// Dispose pedometer resources.
+  /// Dispose resources.
   void dispose();
 }

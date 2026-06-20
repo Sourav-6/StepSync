@@ -7,8 +7,8 @@ import 'package:step_sync/features/auth/presentation/providers/auth_provider.dar
 
 /// Root application widget.
 /// Configures MaterialApp with GoRouter, theming, and Riverpod.
-class StepSyncApp extends ConsumerWidget {
-  const StepSyncApp({super.key});
+class SrpHealthApp extends ConsumerWidget {
+  const SrpHealthApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:step_sync/app.dart';
 import 'package:step_sync/core/services/firebase_service.dart';
 import 'package:step_sync/core/services/hive_service.dart';
+import 'package:step_sync/core/services/background_sync_service.dart';
+import 'package:step_sync/core/services/notification_service.dart';
 
 /// Application entry point.
 /// Initializes Firebase, Hive, and system UI before launching the app.
@@ -30,11 +32,13 @@ void main() async {
   // Initialize services
   await HiveService.initialize();
   await FirebaseService.initialize();
+  await BackgroundSyncService.initialize();
+  await NotificationService.initialize();
 
   // Run the app with Riverpod
   runApp(
     const ProviderScope(
-      child: StepSyncApp(),
+      child: SrpHealthApp(),
     ),
   );
 }

@@ -118,11 +118,11 @@ class Formatters {
   /// Get motivational message based on goal progress.
   static String getMotivationalMessage(int steps, int goal) {
     final progress = goalProgressFraction(steps, goal);
-    if (progress >= 1.0) return 'Goal achieved! You\'re a champion! 🏆';
-    if (progress >= 0.75) return 'So close! Push through! 🎯';
-    if (progress >= 0.50) return 'Amazing effort! Almost at your goal! 🔥';
-    if (progress >= 0.25) return "You're making progress! Halfway there! 💪";
-    return 'Every step counts! Keep moving! 🚶';
+    if (progress >= 1.0) return 'Goal achieved! You\'re a champion!';
+    if (progress >= 0.75) return 'So close! Push through!';
+    if (progress >= 0.50) return 'Amazing effort! Almost at your goal!';
+    if (progress >= 0.25) return 'You\'re making progress! Halfway there!';
+    return 'Every step counts! Keep moving!';
   }
 
   // ─── Rank ───

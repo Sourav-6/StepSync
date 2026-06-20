@@ -5,7 +5,7 @@ import 'package:step_sync/features/leaderboard/data/datasources/leaderboard_remo
 import 'package:step_sync/features/leaderboard/domain/entities/leaderboard_entry.dart';
 
 /// Leaderboard filter types.
-enum LeaderboardFilter { today, thisWeek, thisMonth, allTime }
+enum LeaderboardFilter { today, thisWeek, thisMonth, consistency }
 
 /// Provider for leaderboard data source.
 final leaderboardDataSourceProvider = Provider<LeaderboardRemoteDataSource>((ref) {
@@ -14,23 +14,23 @@ final leaderboardDataSourceProvider = Provider<LeaderboardRemoteDataSource>((ref
 
 /// Provider for the selected leaderboard filter.
 final leaderboardFilterProvider =
-    StateProvider<LeaderboardFilter>((ref) => LeaderboardFilter.allTime);
+    StateProvider<LeaderboardFilter>((ref) => LeaderboardFilter.consistency);
 
 /// Provider for leaderboard data based on filter.
 final leaderboardProvider =
-    FutureProvider<List<LeaderboardEntry>>((ref) async {
+    StreamProvider<List<LeaderboardEntry>>((ref) {
   final filter = ref.watch(leaderboardFilterProvider);
   final dataSource = ref.watch(leaderboardDataSourceProvider);
 
   switch (filter) {
     case LeaderboardFilter.today:
-      return dataSource.getTodayLeaderboard();
+      return Stream.fromFuture(dataSource.getTodayLeaderboard());
     case LeaderboardFilter.thisWeek:
-      return dataSource.getWeeklyLeaderboard();
+      return Stream.fromFuture(dataSource.getWeeklyLeaderboard());
     case LeaderboardFilter.thisMonth:
-      return dataSource.getMonthlyLeaderboard();
-    case LeaderboardFilter.allTime:
-      return dataSource.getAllTimeLeaderboard();
+      return Stream.fromFuture(dataSource.getMonthlyLeaderboard());
+    case LeaderboardFilter.consistency:
+      return dataSource.getConsistencyLeaderboardStream();
   }
 });
 
@@ -48,11 +48,11 @@ final currentUserGlobalRankProvider = FutureProvider<int>((ref) async {
   try {
     // Count how many users have more steps than the current user
     final firestore = FirebaseFirestore.instance;
-    final query = await firestore
-        .collection('users')
-        .where('totalSteps', isGreaterThan: user.totalSteps)
-        .count()
-        .get();
+      final query = await firestore
+          .collection('users')
+          .where('consistencyScore', isGreaterThan: user.consistencyScore)
+          .count()
+          .get();
         
     // Rank is (number of people with more steps) + 1
     return (query.count ?? 0) + 1;

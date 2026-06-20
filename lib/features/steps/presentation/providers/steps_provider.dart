@@ -14,23 +14,84 @@ final stepsRepositoryProvider = Provider<StepsRepository>((ref) {
   return repo;
 });
 
-/// Provider for real-time step count.
-final stepCountProvider = StreamProvider<int>((ref) {
-  final repo = ref.watch(stepsRepositoryProvider);
-  final today = Formatters.formatDateKey(DateTime.now());
-  final cached = repo.getCachedSteps(today);
-
-  // Initialize pedometer with cached steps
-  repo.initializePedometer(cachedStepsToday: cached);
-
-  return repo.stepCountStream;
+/// Provider for real-time step count via Health Connect.
+final stepCountProvider =
+    StateNotifierProvider<StepCountNotifier, AsyncValue<int>>((ref) {
+  return StepCountNotifier(ref.watch(stepsRepositoryProvider));
 });
 
-/// Provider for pedestrian status.
-final pedestrianStatusProvider = StreamProvider<String>((ref) {
-  final repo = ref.watch(stepsRepositoryProvider);
-  return repo.pedestrianStatusStream;
-});
+class StepCountNotifier extends StateNotifier<AsyncValue<int>> {
+  final StepsRepository _repository;
+  Timer? _refreshTimer;
+  int _lastSyncedSteps = 0;
+
+  StepCountNotifier(this._repository) : super(const AsyncValue.data(0)) {
+    // Delay first refresh to ensure the activity is fully in foreground
+    // and the permission dialogs can be shown properly.
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) refresh();
+    });
+    // Poll Health Connect every 30 seconds while the app is open
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      refresh();
+    });
+  }
+
+  Future<void> refresh() async {
+    try {
+      // 1. Check if permissions are granted. If not, don't attempt to fetch yet.
+      // We assume the UI (Dashboard) will handle requesting permissions.
+      bool authorized = await _repository.checkAndRequestPermissions();
+      if (!authorized) {
+        if (!mounted) return;
+        state = const AsyncValue.data(0);
+        return;
+      }
+
+      // 2. Fetch today's steps
+      final steps = await _repository.fetchTodaySteps();
+
+      if (!mounted) return;
+      state = AsyncValue.data(steps);
+
+      // 3. Sync to Firebase if changed significantly or just periodically
+      _syncToFirebase(steps);
+    } catch (e, st) {
+      if (mounted) {
+        state = AsyncValue.error(e, st);
+      }
+    }
+  }
+
+  Future<void> _syncToFirebase(int steps) async {
+    if (steps <= 0) return;
+    if (steps == _lastSyncedSteps) return;
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final today = Formatters.formatDateKey(DateTime.now());
+
+    try {
+      await _repository.saveDailySteps(
+        uid: uid,
+        date: today,
+        steps: steps,
+      );
+      await _repository.cacheSteps(today, steps);
+      _lastSyncedSteps = steps;
+      debugPrint('✅ Steps synced to Firebase: $steps');
+    } catch (e) {
+      debugPrint('❌ Step sync failed: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+}
 
 /// Provider for daily goal.
 final dailyGoalProvider = StateProvider<int>((ref) {
@@ -56,82 +117,6 @@ final todayStepsProvider = Provider<StepData>((ref) {
     error: (_, __) => StepData.empty(goal),
   );
 });
-
-/// Provider that automatically syncs steps to Firebase periodically.
-/// This listens to the step count stream and saves to Firestore every 30 seconds
-/// or whenever a significant step change is detected.
-final stepSyncProvider = Provider<StepSyncService>((ref) {
-  final repo = ref.watch(stepsRepositoryProvider);
-  final service = StepSyncService(repo);
-
-  // Listen to step count changes and trigger sync
-  ref.listen<AsyncValue<int>>(stepCountProvider, (previous, next) {
-    next.whenData((steps) {
-      service.onStepUpdate(steps);
-    });
-  });
-
-  ref.onDispose(() => service.dispose());
-  return service;
-});
-
-/// Service that handles periodic syncing of step data to Firebase.
-class StepSyncService {
-  final StepsRepository _repository;
-  Timer? _syncTimer;
-  int _lastSyncedSteps = 0;
-  int _currentSteps = 0;
-  bool _disposed = false;
-
-  StepSyncService(this._repository) {
-    // Sync every 30 seconds
-    _syncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      _syncToFirebase();
-    });
-  }
-
-  /// Called whenever the pedometer reports a new step count.
-  void onStepUpdate(int steps) {
-    _currentSteps = steps;
-
-    // Sync immediately if steps changed by 50+ since last sync
-    if ((_currentSteps - _lastSyncedSteps).abs() >= 50) {
-      _syncToFirebase();
-    }
-  }
-
-  /// Sync current steps to Firestore and local cache.
-  Future<void> _syncToFirebase() async {
-    if (_disposed) return;
-    if (_currentSteps <= 0) return;
-    if (_currentSteps == _lastSyncedSteps) return;
-
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-
-    final today = Formatters.formatDateKey(DateTime.now());
-
-    try {
-      await _repository.saveDailySteps(
-        uid: uid,
-        date: today,
-        steps: _currentSteps,
-      );
-      await _repository.cacheSteps(today, _currentSteps);
-      _lastSyncedSteps = _currentSteps;
-      debugPrint('✅ Steps synced to Firebase: $_currentSteps');
-    } catch (e) {
-      debugPrint('❌ Step sync failed: $e');
-    }
-  }
-
-  void dispose() {
-    _disposed = true;
-    // Do a final sync before disposing
-    _syncToFirebase();
-    _syncTimer?.cancel();
-  }
-}
 
 /// Provider for recent step history (last 7 days).
 final recentStepsProvider =

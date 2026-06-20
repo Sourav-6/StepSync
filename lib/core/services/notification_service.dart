@@ -1,11 +1,13 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 /// Service for managing Firebase Cloud Messaging notifications.
 class NotificationService {
   NotificationService._();
 
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  static final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
 
   /// Initialize FCM and request permissions.
@@ -23,6 +25,24 @@ class NotificationService {
 
       debugPrint(
           '🔔 Notification permission: ${settings.authorizationStatus}');
+
+      // Initialize local notifications for foreground messages
+      const androidInitSettings = AndroidInitializationSettings('@mipmap/launcher_icon');
+      const initSettings = InitializationSettings(android: androidInitSettings);
+      
+      await _localNotifications.initialize(settings: initSettings);
+
+      // Create a high importance channel for Android 8+
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        'high_importance_channel', 
+        'High Importance Notifications', 
+        description: 'This channel is used for important notifications.',
+        importance: Importance.max,
+      );
+
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
 
       // Get the FCM token
       final token = await _messaging.getToken();
@@ -54,7 +74,27 @@ class NotificationService {
   /// Handle foreground messages.
   static void _handleForegroundMessage(RemoteMessage message) {
     debugPrint('📩 Foreground message: ${message.notification?.title}');
-    // Show local notification or in-app alert
+    
+    final notification = message.notification;
+    final android = message.notification?.android;
+
+    if (notification != null && android != null) {
+      _localNotifications.show(
+        id: notification.hashCode,
+        title: notification.title,
+        body: notification.body,
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'high_importance_channel',
+            'High Importance Notifications',
+            channelDescription: 'This channel is used for important notifications.',
+            importance: Importance.max,
+            priority: Priority.max,
+            icon: '@mipmap/launcher_icon',
+          ),
+        ),
+      );
+    }
   }
 
   /// Handle message tap when app was in background.

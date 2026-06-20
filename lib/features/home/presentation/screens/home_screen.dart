@@ -10,20 +10,80 @@ import 'package:step_sync/core/widgets/loading_shimmer.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 import 'package:step_sync/features/home/presentation/widgets/metric_card.dart';
 import 'package:step_sync/features/home/presentation/widgets/step_progress_ring.dart';
+import 'package:step_sync/features/home/presentation/widgets/dashboard_highlights.dart';
+import 'package:step_sync/features/home/presentation/widgets/weekly_consistency_card.dart';
 import 'package:step_sync/features/steps/presentation/providers/steps_provider.dart';
+import 'package:step_sync/features/leaderboard/presentation/providers/leaderboard_provider.dart';
 
 /// Main home dashboard screen showing step progress, metrics, and status.
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _healthCheckDone = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkHealthConnect();
+    });
+  }
+
+  Future<void> _checkHealthConnect() async {
+    if (_healthCheckDone) return;
+    _healthCheckDone = true;
+
+    final repo = ref.read(stepsRepositoryProvider);
+    final isAvailable = await repo.checkHealthConnectAvailable();
+
+    if (!isAvailable && mounted) {
+      // Health Connect not installed — prompt to install
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('Health Connect Required'),
+          content: const Text(
+              'SRP Health uses Google Health Connect to read your daily steps — '
+              'the same data that Google Fit displays. '
+              'Please install Health Connect from the Play Store.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Later'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await repo.promptInstallHealthConnect();
+              },
+              child: const Text('Install'),
+            ),
+          ],
+        ),
+      );
+    } else if (mounted) {
+      // Health Connect is available — request permissions
+      final hasPerms = await repo.checkAndRequestPermissions();
+      if (hasPerms) {
+        // Permissions granted! Trigger a refresh of step data.
+        ref.read(stepCountProvider.notifier).refresh();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final userState = ref.watch(currentUserProvider);
     final stepData = ref.watch(todayStepsProvider);
 
-    // Activate the step sync service to auto-save steps to Firebase
-    ref.watch(stepSyncProvider);
+    // The StepCountNotifier handles polling and syncing automatically now.
 
     return Scaffold(
       body: SafeArea(
@@ -34,7 +94,8 @@ class HomeScreen extends ConsumerWidget {
             final userName = user?.name ?? 'User';
             final greeting = Formatters.getGreeting();
             final streak = user?.currentStreak ?? 0;
-            final rank = user?.currentRank ?? 0;
+            final liveRankAsync = ref.watch(currentUserGlobalRankProvider);
+            final rank = liveRankAsync.valueOrNull ?? user?.currentRank ?? 0;
 
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -50,7 +111,7 @@ class HomeScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '$greeting 👋',
+                            greeting,
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               color: isDark
@@ -110,7 +171,7 @@ class HomeScreen extends ConsumerWidget {
 
                   const SizedBox(height: 32),
 
-                  // ─── Progress Ring ───
+                  
                   Center(
                     child: StepProgressRing(
                       progress: stepData.progress,
@@ -150,9 +211,10 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        Text(
-                          stepData.goalReached ? '🏆' : '💪',
-                          style: const TextStyle(fontSize: 28),
+                        Icon(
+                          stepData.goalReached ? Icons.emoji_events_rounded : Icons.fitness_center_rounded,
+                          size: 28,
+                          color: Colors.white,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -174,7 +236,7 @@ class HomeScreen extends ConsumerWidget {
 
                   const SizedBox(height: 24),
 
-                  // ─── Metrics Grid ───
+                  
                   Row(
                     children: [
                       Expanded(
@@ -230,6 +292,12 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ],
                   ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.1),
+
+                  const SizedBox(height: 24),
+                  const DashboardHighlights().animate().fadeIn(delay: 650.ms).slideY(begin: 0.1),
+
+                  const SizedBox(height: 24),
+                  const WeeklyConsistencyCard().animate().fadeIn(delay: 700.ms).slideY(begin: 0.1),
 
                   const SizedBox(height: 24),
 

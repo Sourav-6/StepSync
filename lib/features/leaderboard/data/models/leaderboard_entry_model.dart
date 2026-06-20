@@ -10,6 +10,7 @@ class LeaderboardEntryModel extends LeaderboardEntry {
     super.profileImage,
     required super.steps,
     required super.rank,
+    super.consistencyScore,
   });
 
   /// Create from a Firestore user document (all-time leaderboard).
@@ -21,6 +22,7 @@ class LeaderboardEntryModel extends LeaderboardEntry {
       profileImage: data[FirestorePaths.fieldProfileImage] ?? '',
       steps: data[FirestorePaths.fieldTotalSteps] ?? 0,
       rank: rank,
+      consistencyScore: (data[FirestorePaths.fieldConsistencyScore] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -36,6 +38,7 @@ class LeaderboardEntryModel extends LeaderboardEntry {
       profileImage: userData[FirestorePaths.fieldProfileImage] ?? '',
       steps: steps,
       rank: rank,
+      consistencyScore: (userData[FirestorePaths.fieldConsistencyScore] as num?)?.toDouble() ?? 0.0,
     );
   }
 }

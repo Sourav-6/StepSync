@@ -24,21 +24,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       icon: Icons.directions_walk_rounded,
       title: AppStrings.onboardingTitle1,
       description: AppStrings.onboardingDesc1,
-      gradient: AppColors.primaryGradient,
+      backgroundColor: const Color(0xFFE3F2FD),
       iconColor: AppColors.primaryBlue,
     ),
     _OnboardingData(
       icon: Icons.people_rounded,
       title: AppStrings.onboardingTitle2,
       description: AppStrings.onboardingDesc2,
-      gradient: AppColors.tealGradient,
+      backgroundColor: const Color(0xFFE0F2F1),
       iconColor: AppColors.secondaryTeal,
     ),
     _OnboardingData(
       icon: Icons.emoji_events_rounded,
       title: AppStrings.onboardingTitle3,
       description: AppStrings.onboardingDesc3,
-      gradient: AppColors.accentGradient,
+      backgroundColor: const Color(0xFFFFF3E0),
       iconColor: AppColors.accentOrange,
     ),
   ];
@@ -114,20 +114,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           width: 160,
                           height: 160,
                           decoration: BoxDecoration(
-                            gradient: page.gradient,
-                            borderRadius: BorderRadius.circular(40),
-                            boxShadow: [
-                              BoxShadow(
-                                color: page.iconColor.withValues(alpha: 0.3),
-                                blurRadius: 40,
-                                spreadRadius: 5,
-                              ),
-                            ],
+                            color: isDark ? page.iconColor.withValues(alpha: 0.15) : page.backgroundColor,
+                            borderRadius: BorderRadius.circular(48),
                           ),
                           child: Icon(
                             page.icon,
                             size: 80,
-                            color: Colors.white,
+                            color: page.iconColor,
                           ),
                         )
                             .animate()
@@ -187,7 +180,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       (index) => AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: _currentPage == index ? 32 : 8,
+                        width: _currentPage == index ? 24 : 8,
                         height: 8,
                         decoration: BoxDecoration(
                           color: _currentPage == index
@@ -195,7 +188,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               : (isDark
                                   ? AppColors.darkBorder
                                   : AppColors.lightBorder),
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                     ),
@@ -213,7 +206,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         backgroundColor: AppColors.primaryBlue,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(24),
                         ),
                         elevation: 0,
                       ),
@@ -245,14 +238,14 @@ class _OnboardingData {
   final IconData icon;
   final String title;
   final String description;
-  final LinearGradient gradient;
+  final Color backgroundColor;
   final Color iconColor;
 
   const _OnboardingData({
     required this.icon,
     required this.title,
     required this.description,
-    required this.gradient,
+    required this.backgroundColor,
     required this.iconColor,
   });
 }

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:step_sync/core/constants/firestore_paths.dart';
 import 'package:step_sync/core/utils/formatters.dart';
 import 'package:step_sync/features/leaderboard/data/models/leaderboard_entry_model.dart';
+import 'package:step_sync/features/groups/data/models/group_model.dart';
 
 /// Remote data source for leaderboard data using Firestore.
 class LeaderboardRemoteDataSource {
@@ -10,22 +11,23 @@ class LeaderboardRemoteDataSource {
   LeaderboardRemoteDataSource({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  /// Get the global all-time leaderboard.
-  Future<List<LeaderboardEntryModel>> getAllTimeLeaderboard({
+  /// Get the global consistency leaderboard as a real-time stream.
+  Stream<List<LeaderboardEntryModel>> getConsistencyLeaderboardStream({
     int limit = 50,
-  }) async {
-    final query = await _firestore
+  }) {
+    return _firestore
         .collection(FirestorePaths.users)
-        .orderBy(FirestorePaths.fieldTotalSteps, descending: true)
+        .orderBy(FirestorePaths.fieldConsistencyScore, descending: true)
         .limit(limit)
-        .get();
-
-    int rank = 1;
-    return query.docs.map((doc) {
-      final entry = LeaderboardEntryModel.fromFirestore(doc, rank);
-      rank++;
-      return entry;
-    }).toList();
+        .snapshots()
+        .map((snapshot) {
+      int rank = 1;
+      return snapshot.docs.map((doc) {
+        final entry = LeaderboardEntryModel.fromFirestore(doc, rank);
+        rank++;
+        return entry;
+      }).toList();
+    });
   }
 
   /// Get today's leaderboard from daily_steps collection.
@@ -62,6 +64,44 @@ class LeaderboardRemoteDataSource {
     );
 
     return _getAggregatedLeaderboard(dates, limit: limit);
+  }
+
+  /// Get last month's leaderboard (aggregated).
+  Future<List<LeaderboardEntryModel>> getLastMonthLeaderboard({
+    int limit = 50,
+  }) async {
+    final now = DateTime.now();
+    final previousMonth = DateTime(now.year, now.month - 1, 1);
+    final daysInPreviousMonth = DateTime(now.year, now.month, 0).day;
+
+    final dates = List.generate(
+      daysInPreviousMonth,
+      (i) => Formatters.formatDateKey(DateTime(previousMonth.year, previousMonth.month, i + 1)),
+    );
+
+    return _getAggregatedLeaderboard(dates, limit: limit);
+  }
+
+  /// Get top groups leaderboard based on average steps per member as a real-time stream.
+  Stream<List<GroupModel>> getTopGroupsStream({
+    int limit = 10,
+  }) {
+    return _firestore
+        .collection(FirestorePaths.groups)
+        .where('isPublic', isEqualTo: true)
+        .snapshots()
+        .map((snapshot) {
+      final groups = snapshot.docs.map((doc) => GroupModel.fromFirestore(doc)).toList();
+
+      // Sort by average steps descending
+      groups.sort((a, b) {
+        final avgA = a.memberUids.isNotEmpty ? a.totalSteps / a.memberUids.length : 0.0;
+        final avgB = b.memberUids.isNotEmpty ? b.totalSteps / b.memberUids.length : 0.0;
+        return avgB.compareTo(avgA);
+      });
+
+      return groups.take(limit).toList();
+    });
   }
 
   /// Get daily leaderboard for a specific date.

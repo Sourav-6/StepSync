@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:step_sync/core/constants/app_colors.dart';
 import 'package:step_sync/core/constants/app_dimensions.dart';
@@ -9,6 +10,9 @@ import 'package:step_sync/core/utils/formatters.dart';
 import 'package:step_sync/core/widgets/loading_shimmer.dart';
 import 'package:step_sync/features/leaderboard/domain/entities/leaderboard_entry.dart';
 import 'package:step_sync/features/leaderboard/presentation/providers/leaderboard_provider.dart';
+import 'package:step_sync/features/leaderboard/presentation/widgets/leaderboard_status_card.dart';
+import 'package:step_sync/features/leaderboard/presentation/widgets/top_performing_group_card.dart';
+import 'package:step_sync/features/leaderboard/presentation/widgets/consistent_performer_card.dart';
 
 /// Leaderboard screen showing ranked users with tab filters.
 class LeaderboardScreen extends ConsumerWidget {
@@ -27,9 +31,35 @@ class LeaderboardScreen extends ConsumerWidget {
           style: GoogleFonts.outfit(fontWeight: FontWeight.w700),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.people_rounded),
+            tooltip: AppStrings.friendsLeaderboard,
+            onPressed: () => context.push('/friends/leaderboard'),
+          ),
+        ],
       ),
       body: Column(
         children: [
+          // ─── Highlights Section ───
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.screenPadding,
+              vertical: 8,
+            ),
+            child: Column(
+              children: const [
+                LeaderboardStatusCard(),
+                SizedBox(height: 8),
+                TopPerformingGroupCard(),
+                SizedBox(height: 8),
+                ConsistentPerformerCard(),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 4),
+
           // Filter tabs
           Padding(
             padding: const EdgeInsets.symmetric(
@@ -161,21 +191,21 @@ class LeaderboardScreen extends ConsumerWidget {
         return 'Week';
       case LeaderboardFilter.thisMonth:
         return 'Month';
-      case LeaderboardFilter.allTime:
-        return 'All Time';
+      case LeaderboardFilter.consistency:
+        return 'Consistency';
     }
   }
 }
 
 /// Individual leaderboard tile for a user entry.
-class _LeaderboardTile extends StatelessWidget {
+class _LeaderboardTile extends ConsumerWidget {
   final LeaderboardEntry entry;
   final int index;
 
   const _LeaderboardTile({required this.entry, required this.index});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isTopThree = entry.rank <= 3;
 
@@ -268,33 +298,59 @@ class _LeaderboardTile extends StatelessWidget {
             ),
           ),
 
-          // Steps
+          // Steps or Consistency
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                Formatters.formatNumber(entry.steps),
-                style: GoogleFonts.outfit(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: isTopThree
-                      ? _getRankColor(entry.rank)
-                      : AppColors.secondaryTeal,
+              if (ref.read(leaderboardFilterProvider) == LeaderboardFilter.consistency) ...[
+                _buildStars(entry.consistencyScore),
+                Text(
+                  '${(entry.consistencyScore * 100).toInt()}%',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
+                  ),
                 ),
-              ),
-              Text(
-                'steps',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: isDark
-                      ? AppColors.textDarkSecondary
-                      : AppColors.textLightSecondary,
+              ] else ...[
+                Text(
+                  Formatters.formatNumber(entry.steps),
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: isTopThree ? _getRankColor(entry.rank) : AppColors.secondaryTeal,
+                  ),
                 ),
-              ),
+                Text(
+                  'steps',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
+                  ),
+                ),
+              ]
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildStars(double score) {
+    // 0.0 to 1.0 mapped to 0 to 5 stars
+    final fullStars = (score * 5).floor();
+    final hasHalfStar = (score * 5) - fullStars >= 0.5;
+    
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        if (index < fullStars) {
+          return const Icon(Icons.star, color: Colors.orange, size: 16);
+        } else if (index == fullStars && hasHalfStar) {
+          return const Icon(Icons.star_half, color: Colors.orange, size: 16);
+        } else {
+          return const Icon(Icons.star_border, color: Colors.orange, size: 16);
+        }
+      }),
     );
   }
 

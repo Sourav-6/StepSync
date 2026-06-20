@@ -10,10 +10,18 @@ import 'package:step_sync/core/constants/app_strings.dart';
 import 'package:step_sync/core/widgets/custom_snackbar.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 import 'package:step_sync/features/auth/presentation/widgets/auth_text_field.dart';
+import 'package:step_sync/core/utils/firebase_error_parser.dart';
 
 /// OTP verification screen for phone authentication.
 class OtpVerificationScreen extends ConsumerStatefulWidget {
-  const OtpVerificationScreen({super.key});
+  final String? phoneNumber;
+  final bool isLinking;
+
+  const OtpVerificationScreen({
+    super.key,
+    this.phoneNumber,
+    this.isLinking = false,
+  });
 
   @override
   ConsumerState<OtpVerificationScreen> createState() =>
@@ -28,6 +36,26 @@ class _OtpVerificationScreenState
   final List<FocusNode> _otpFocusNodes =
       List.generate(6, (_) => FocusNode());
 
+  /// Normalize a phone number to E.164 format.
+  String _normalizePhone(String raw) {
+    // Strip spaces, dashes, parentheses
+    String phone = raw.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+    // If the number doesn't start with '+', assume Indian (+91)
+    if (phone.isNotEmpty && !phone.startsWith('+')) {
+      phone = '+91$phone';
+    }
+    return phone;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill phone number if provided, but don't auto-send OTP
+    if (widget.phoneNumber != null && widget.phoneNumber!.isNotEmpty) {
+      _phoneController.text = widget.phoneNumber!;
+    }
+  }
+
   @override
   void dispose() {
     _phoneController.dispose();
@@ -41,7 +69,7 @@ class _OtpVerificationScreenState
   }
 
   void _sendOtp() {
-    final phone = _phoneController.text.trim();
+    final phone = _normalizePhone(_phoneController.text);
     if (phone.isEmpty) {
       CustomSnackBar.showError(context, AppStrings.phoneRequired);
       return;
@@ -58,8 +86,10 @@ class _OtpVerificationScreenState
 
     final user = await ref.read(phoneAuthProvider.notifier).verifyOtp(otp);
     if (user != null && mounted) {
-      ref.read(currentUserProvider.notifier).refresh();
-      context.go('/home');
+      await ref.read(currentUserProvider.notifier).refresh();
+      if (mounted) {
+        context.go('/home');
+      }
     }
   }
 
@@ -68,12 +98,18 @@ class _OtpVerificationScreenState
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final phoneState = ref.watch(phoneAuthProvider);
 
-    ref.listen<PhoneAuthState>(phoneAuthProvider, (_, next) {
+    ref.listen<PhoneAuthState>(phoneAuthProvider, (_, next) async {
       if (next.error != null) {
-        CustomSnackBar.showError(context, next.error!);
+        CustomSnackBar.showError(context, FirebaseErrorParser.parseAuthError(next.error!));
       }
-      if (next.codeSent) {
+      if (next.codeSent && next.user == null) {
         CustomSnackBar.showSuccess(context, 'OTP sent successfully!');
+      }
+      if (next.user != null) {
+        await ref.read(currentUserProvider.notifier).refresh();
+        if (mounted) {
+          context.go('/home');
+        }
       }
     });
 
@@ -86,9 +122,14 @@ class _OtpVerificationScreenState
             Icons.arrow_back_ios_rounded,
             color: isDark ? AppColors.textDarkPrimary : AppColors.textLightPrimary,
           ),
-          onPressed: () {
+          onPressed: () async {
             ref.read(phoneAuthProvider.notifier).reset();
-            context.pop();
+            if (widget.isLinking) {
+              await ref.read(currentUserProvider.notifier).signOut();
+            }
+            if (context.mounted) {
+              context.pop();
+            }
           },
         ),
       ),
@@ -156,6 +197,7 @@ class _OtpVerificationScreenState
                   hint: '+91 9876543210',
                   keyboardType: TextInputType.phone,
                   prefixIcon: Icons.phone_outlined,
+                  // Always allow editing so user can fix the number
                 ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
 
                 const SizedBox(height: 32),

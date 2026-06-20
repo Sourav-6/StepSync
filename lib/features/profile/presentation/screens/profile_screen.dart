@@ -7,6 +7,8 @@ import 'package:step_sync/core/constants/app_colors.dart';
 import 'package:step_sync/core/constants/app_dimensions.dart';
 import 'package:step_sync/core/constants/app_strings.dart';
 import 'package:step_sync/core/utils/formatters.dart';
+import 'package:step_sync/features/achievements/presentation/providers/badges_provider.dart';
+import 'package:step_sync/features/achievements/presentation/widgets/achievements_grid.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 import 'package:step_sync/features/leaderboard/presentation/providers/leaderboard_provider.dart';
 
@@ -169,6 +171,48 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
+
+                    const SizedBox(height: 12),
+
+                    // Referral Code
+                    if (user.referralCode.isNotEmpty)
+                      GestureDetector(
+                        onTap: () {
+                          // In a real app, copy to clipboard here
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Referral code copied!')),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.primaryBlue.withValues(alpha: 0.5),
+                              style: BorderStyle.solid,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.card_giftcard_rounded, size: 16, color: AppColors.primaryBlue),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Code: ${user.referralCode}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? AppColors.textDarkPrimary : AppColors.textLightPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(Icons.copy_rounded, size: 14, color: AppColors.primaryBlue),
+                            ],
+                          ),
+                        ),
+                      ),
                   ],
                 )
                     .animate()
@@ -234,6 +278,43 @@ class ProfileScreen extends ConsumerWidget {
                 ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.05),
 
                 const SizedBox(height: 32),
+
+                // ─── Achievements Section ───
+                Consumer(
+                  builder: (context, ref, child) {
+                    final badges = ref.watch(individualBadgesProvider);
+                    if (badges.isEmpty) return const SizedBox.shrink();
+                    return AchievementsGrid(badges: badges)
+                        .animate()
+                        .fadeIn(delay: 300.ms)
+                        .slideY(begin: 0.05);
+                  },
+                ),
+
+                const SizedBox(height: 32),
+
+                // ─── Friends Section ───
+                _buildActionTile(
+                  context,
+                  AppStrings.friends,
+                  Icons.people_rounded,
+                  () => context.push('/friends'),
+                  badge: '${user.friendUids.length}',
+                ),
+                _buildActionTile(
+                  context,
+                  AppStrings.inviteFriends,
+                  Icons.person_add_alt_1_rounded,
+                  () => context.push('/friends/invite'),
+                ),
+                _buildActionTile(
+                  context,
+                  'My Referrals',
+                  Icons.card_giftcard_rounded,
+                  () => context.push('/my-referrals'),
+                ),
+
+                const SizedBox(height: 8),
 
                 // ─── Actions ───
                 _buildActionTile(
@@ -357,8 +438,9 @@ class ProfileScreen extends ConsumerWidget {
     BuildContext context,
     String title,
     IconData icon,
-    VoidCallback onTap,
-  ) {
+    VoidCallback onTap, {
+    String? badge,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
@@ -390,6 +472,23 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
             ),
+            if (badge != null && badge != '0')
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  badge,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
             Icon(
               Icons.chevron_right_rounded,
               color: isDark

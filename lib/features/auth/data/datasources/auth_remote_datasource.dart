@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:step_sync/core/constants/firestore_paths.dart';
 import 'package:step_sync/features/auth/data/models/user_model.dart';
-import 'package:step_sync/features/auth/domain/entities/user_entity.dart';
 
 /// Remote data source wrapping Firebase Auth and Firestore for user operations.
 class AuthRemoteDataSource {
@@ -88,6 +87,7 @@ class AuthRemoteDataSource {
     required String name,
     required String email,
     required String password,
+    String? referralCode,
   }) async {
     final UserCredential userCredential =
         await _firebaseAuth.createUserWithEmailAndPassword(
@@ -98,12 +98,16 @@ class AuthRemoteDataSource {
 
     // Update Firebase display name
     await user.updateDisplayName(name);
+    
+    // Resolve referral code
+    String? referredBy = await _resolveReferralCode(referralCode);
 
     // Create Firestore document
     return _getOrCreateUser(
       uid: user.uid,
       name: name,
       email: email,
+      referredBy: referredBy,
     );
   }
 
@@ -114,12 +118,44 @@ class AuthRemoteDataSource {
     required String phoneNumber,
     required Function(String verificationId) onCodeSent,
     required Function(String error) onError,
+    Function(UserModel user)? onVerificationCompleted,
   }) async {
     await _firebaseAuth.verifyPhoneNumber(
       phoneNumber: phoneNumber,
       verificationCompleted: (PhoneAuthCredential credential) async {
-        // Auto-resolution for Android
-        await _firebaseAuth.signInWithCredential(credential);
+        try {
+          final currentUser = _firebaseAuth.currentUser;
+          UserCredential userCredential;
+
+          if (currentUser != null) {
+            try {
+              userCredential = await currentUser.linkWithCredential(credential);
+            } on FirebaseAuthException catch (e) {
+              if (e.code == 'provider-already-linked') {
+                userCredential = await _firebaseAuth.signInWithCredential(credential);
+              } else {
+                rethrow;
+              }
+            }
+          } else {
+            userCredential = await _firebaseAuth.signInWithCredential(credential);
+          }
+
+          final user = userCredential.user!;
+          final userModel = await _getOrCreateUser(
+            uid: user.uid,
+            name: user.displayName ?? 'Phone User',
+            email: user.email ?? '',
+            phone: user.phoneNumber ?? '',
+          );
+          await _markPhoneVerified(user.uid, user.phoneNumber ?? '');
+
+          if (onVerificationCompleted != null) {
+            onVerificationCompleted(userModel);
+          }
+        } catch (e) {
+          onError(e.toString());
+        }
       },
       verificationFailed: (FirebaseAuthException e) {
         onError(e.message ?? 'Verification failed');
@@ -141,16 +177,58 @@ class AuthRemoteDataSource {
       smsCode: otp,
     );
 
-    final UserCredential userCredential =
-        await _firebaseAuth.signInWithCredential(credential);
-    final user = userCredential.user!;
+    final currentUser = _firebaseAuth.currentUser;
+    UserCredential userCredential;
 
-    return _getOrCreateUser(
-      uid: user.uid,
-      name: 'Phone User',
-      email: '',
-      phone: user.phoneNumber ?? '',
-    );
+    if (currentUser != null) {
+      // User is already signed in (e.g. Email/Google). Link phone credential.
+      try {
+        userCredential = await currentUser.linkWithCredential(credential);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'provider-already-linked') {
+          await _markPhoneVerified(currentUser.uid, currentUser.phoneNumber ?? '');
+          return _getOrCreateUser(
+            uid: currentUser.uid,
+            name: currentUser.displayName ?? 'User',
+            email: currentUser.email ?? '',
+            phone: currentUser.phoneNumber ?? '',
+          );
+        } else {
+          rethrow;
+        }
+      }
+      final user = userCredential.user!;
+      final userModel = await _getOrCreateUser(
+        uid: user.uid,
+        name: user.displayName ?? 'User',
+        email: user.email ?? '',
+        phone: user.phoneNumber ?? '',
+      );
+      await _markPhoneVerified(user.uid, user.phoneNumber ?? '');
+      return userModel;
+    } else {
+      userCredential = await _firebaseAuth.signInWithCredential(credential);
+      final user = userCredential.user!;
+      final userModel = await _getOrCreateUser(
+        uid: user.uid,
+        name: 'Phone User',
+        email: '',
+        phone: user.phoneNumber ?? '',
+      );
+      await _markPhoneVerified(user.uid, user.phoneNumber ?? '');
+      return userModel;
+    }
+  }
+
+  /// Mark user's phone as verified in Firestore.
+  Future<void> _markPhoneVerified(String uid, String phone) async {
+    final Map<String, dynamic> updates = {
+      FirestorePaths.fieldPhoneVerified: true,
+    };
+    if (phone.isNotEmpty) {
+      updates[FirestorePaths.fieldPhone] = phone;
+    }
+    await _firestore.collection(FirestorePaths.users).doc(uid).update(updates);
   }
 
   // ─── Password Reset ───
@@ -227,14 +305,22 @@ class AuthRemoteDataSource {
     required String email,
     String phone = '',
     String profileImage = '',
+    String? referredBy,
   }) async {
     final docRef = _firestore.collection(FirestorePaths.users).doc(uid);
     final docSnap = await docRef.get();
 
     if (docSnap.exists) {
-      // Update last login
-      await _updateLastLogin(uid);
-      return UserModel.fromFirestore(docSnap);
+      // Update last login and phone if provided
+      final Map<String, dynamic> updates = {
+        FirestorePaths.fieldLastLogin: FieldValue.serverTimestamp(),
+      };
+      if (phone.isNotEmpty) {
+        updates[FirestorePaths.fieldPhone] = phone;
+      }
+      await docRef.update(updates);
+      final updatedSnap = await docRef.get();
+      return UserModel.fromFirestore(updatedSnap);
     } else {
       // Create new user document
       final newUser = UserModel.newUser(
@@ -243,10 +329,31 @@ class AuthRemoteDataSource {
         email: email,
         phone: phone,
         profileImage: profileImage,
+        referredBy: referredBy,
       );
       await docRef.set(newUser.toFirestore());
       return newUser;
     }
+  }
+
+  /// Resolve referral code to UID.
+  Future<String?> _resolveReferralCode(String? referralCode) async {
+    if (referralCode == null || referralCode.trim().isEmpty) return null;
+    
+    try {
+      final querySnapshot = await _firestore
+          .collection(FirestorePaths.users)
+          .where(FirestorePaths.fieldReferralCode, isEqualTo: referralCode.trim().toUpperCase())
+          .limit(1)
+          .get();
+          
+      if (querySnapshot.docs.isNotEmpty) {
+        return querySnapshot.docs.first.id;
+      }
+    } catch (e) {
+      // Ignore errors for referral resolution
+    }
+    return null;
   }
 
   /// Get UserModel from Firestore.
@@ -261,5 +368,17 @@ class AuthRemoteDataSource {
     await _firestore.collection(FirestorePaths.users).doc(uid).update({
       FirestorePaths.fieldLastLogin: FieldValue.serverTimestamp(),
     });
+  }
+
+  /// Get users referred by a specific uid.
+  Future<List<UserModel>> getReferredUsers(String uid) async {
+    final querySnapshot = await _firestore
+        .collection(FirestorePaths.users)
+        .where(FirestorePaths.fieldReferredBy, isEqualTo: uid)
+        .get();
+        
+    return querySnapshot.docs
+        .map((doc) => UserModel.fromFirestore(doc))
+        .toList();
   }
 }

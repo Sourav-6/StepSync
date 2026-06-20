@@ -8,6 +8,7 @@ class LeaderboardEntry {
   final String profileImage;
   final int steps;
   final int rank;
+  final double consistencyScore;
 
   const LeaderboardEntry({
     required this.uid,
@@ -15,5 +16,6 @@ class LeaderboardEntry {
     this.profileImage = '',
     required this.steps,
     required this.rank,
+    this.consistencyScore = 0.0,
   });
 }

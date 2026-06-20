@@ -1,108 +1,108 @@
 import 'package:flutter/material.dart';
 
-/// StepSync premium fitness color palette.
-/// Uses a vibrant, modern scheme inspired by fitness/health apps.
+/// StepSync Google Pay style color palette.
+/// Uses a vibrant, modern scheme inspired by clean Material 3 fintech apps.
 class AppColors {
   AppColors._();
 
   // ─── Primary Palette ───
-  static const Color primaryBlue = Color(0xFF2563EB);
-  static const Color primaryDark = Color(0xFF1E40AF);
-  static const Color primaryLight = Color(0xFF60A5FA);
-  static const Color primarySurface = Color(0xFFDBEAFE);
+  static const Color primaryBlue = Color(0xFF1A73E8);
+  static const Color primaryDark = Color(0xFF174EA6);
+  static const Color primaryLight = Color(0xFF8AB4F8);
+  static const Color primarySurface = Color(0xFFE8F0FE);
 
   // ─── Secondary / Teal ───
-  static const Color secondaryTeal = Color(0xFF14B8A6);
-  static const Color secondaryDark = Color(0xFF0D9488);
-  static const Color secondaryLight = Color(0xFF5EEAD4);
+  static const Color secondaryTeal = Color(0xFF1E8E3E); // Mapping to Google Green
+  static const Color secondaryDark = Color(0xFF137333);
+  static const Color secondaryLight = Color(0xFF81C995);
 
   // ─── Accent / Orange ───
-  static const Color accentOrange = Color(0xFFF97316);
-  static const Color accentDark = Color(0xFFEA580C);
-  static const Color accentLight = Color(0xFFFDBA74);
+  static const Color accentOrange = Color(0xFFFA7B17); // Google Yellow/Orange
+  static const Color accentDark = Color(0xFFE37400);
+  static const Color accentLight = Color(0xFFFDE293);
 
   // ─── Success / Green ───
-  static const Color successGreen = Color(0xFF22C55E);
-  static const Color successDark = Color(0xFF16A34A);
-  static const Color successLight = Color(0xFF86EFAC);
+  static const Color successGreen = Color(0xFF1E8E3E);
+  static const Color successDark = Color(0xFF137333);
+  static const Color successLight = Color(0xFF81C995);
 
   // ─── Warning / Yellow ───
-  static const Color warningYellow = Color(0xFFEAB308);
-  static const Color warningLight = Color(0xFFFDE047);
+  static const Color warningYellow = Color(0xFFF9AB00);
+  static const Color warningLight = Color(0xFFFDE293);
 
   // ─── Error / Red ───
-  static const Color errorRed = Color(0xFFEF4444);
-  static const Color errorDark = Color(0xFFDC2626);
-  static const Color errorLight = Color(0xFFFCA5A5);
+  static const Color errorRed = Color(0xFFD93025);
+  static const Color errorDark = Color(0xFFA50E0E);
+  static const Color errorLight = Color(0xFFF28B82);
 
   // ─── Dark Theme Backgrounds ───
-  static const Color darkBg = Color(0xFF0F172A);
-  static const Color darkSurface = Color(0xFF1E293B);
-  static const Color darkCard = Color(0xFF334155);
-  static const Color darkBorder = Color(0xFF475569);
+  static const Color darkBg = Color(0xFF202124);
+  static const Color darkSurface = Color(0xFF303134);
+  static const Color darkCard = Color(0xFF3C4043);
+  static const Color darkBorder = Color(0xFF5F6368);
 
   // ─── Light Theme Backgrounds ───
-  static const Color lightBg = Color(0xFFF8FAFC);
+  static const Color lightBg = Color(0xFFFFFFFF);
   static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightCard = Color(0xFFF1F5F9);
-  static const Color lightBorder = Color(0xFFE2E8F0);
+  static const Color lightCard = Color(0xFFF8F9FA);
+  static const Color lightBorder = Color(0xFFDADCE0);
 
   // ─── Text Colors ───
-  static const Color textDarkPrimary = Color(0xFFF8FAFC);
-  static const Color textDarkSecondary = Color(0xFF94A3B8);
-  static const Color textLightPrimary = Color(0xFF0F172A);
-  static const Color textLightSecondary = Color(0xFF64748B);
+  static const Color textDarkPrimary = Color(0xFFE8EAED);
+  static const Color textDarkSecondary = Color(0xFF9AA0A6);
+  static const Color textLightPrimary = Color(0xFF202124);
+  static const Color textLightSecondary = Color(0xFF5E6368);
 
   // ─── Glassmorphism ───
   static const Color glassWhite = Color(0x33FFFFFF);
   static const Color glassBorder = Color(0x55FFFFFF);
-  static const Color glassDark = Color(0x331E293B);
-  static const Color glassDarkBorder = Color(0x55475569);
+  static const Color glassDark = Color(0x33202124);
+  static const Color glassDarkBorder = Color(0x555F6368);
 
   // ─── Gradient Presets ───
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [primaryBlue, primaryDark],
+    colors: [primaryLight, primaryBlue],
   );
 
   static const LinearGradient accentGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [accentOrange, Color(0xFFEC4899)],
+    colors: [accentLight, accentOrange],
   );
 
   static const LinearGradient tealGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [secondaryTeal, Color(0xFF06B6D4)],
+    colors: [secondaryLight, secondaryTeal],
   );
 
   static const LinearGradient successGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [successGreen, secondaryTeal],
+    colors: [successLight, successGreen],
   );
 
   static const LinearGradient darkCardGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+    colors: [Color(0xFF303134), Color(0xFF202124)],
   );
 
   // ─── Badge Colors ───
-  static const Color goldBadge = Color(0xFFFFD700);
-  static const Color silverBadge = Color(0xFFC0C0C0);
-  static const Color bronzeBadge = Color(0xFFCD7F32);
+  static const Color goldBadge = Color(0xFFF9AB00);
+  static const Color silverBadge = Color(0xFFBCC1C6);
+  static const Color bronzeBadge = Color(0xFFD93025);
 
   // ─── Chart Colors ───
   static const List<Color> chartColors = [
     primaryBlue,
-    secondaryTeal,
-    accentOrange,
     successGreen,
-    Color(0xFF8B5CF6),
-    Color(0xFFEC4899),
     warningYellow,
+    errorRed,
+    Color(0xFFA142F4),
+    Color(0xFF24C1E0),
+    Color(0xFFFA7B17),
   ];
 }

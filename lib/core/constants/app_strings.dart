@@ -3,7 +3,7 @@ class AppStrings {
   AppStrings._();
 
   // ─── App Info ───
-  static const String appName = 'StepSync';
+  static const String appName = 'SRP Health';
   static const String appTagline = 'Walk Together, Win Together';
   static const String appVersion = '1.0.0';
 
@@ -90,11 +90,11 @@ class AppStrings {
 
   // ─── Motivational Messages ───
   static const List<String> motivationalMessages = [
-    'Every step counts! Keep moving! 🚶',
-    "You're making progress! Halfway there! 💪",
-    'Amazing effort! Almost at your goal! 🔥',
-    'So close! Push through! 🎯',
-    'Goal achieved! You\'re a champion! 🏆',
+    'Every step counts! Keep moving!',
+    'You\'re making progress! Halfway there!',
+    'Amazing effort! Almost at your goal!',
+    'So close! Push through!',
+    'Goal achieved! You\'re a champion!',
   ];
 
   // ─── Onboarding ───
@@ -123,11 +123,50 @@ class AppStrings {
   static const String phoneRequired = 'Please enter your phone number.';
 
   // ─── Streak Badges ───
-  static const String streak3Day = '3-Day Streak 🔥';
-  static const String streak7Day = '7-Day Streak ⚡';
-  static const String streak30Day = '30-Day Streak 🏅';
-  static const String streak100Day = '100-Day Streak 🏆';
+  static const String streak3Day = '3-Day Streak';
+  static const String streak7Day = '7-Day Streak';
+  static const String streak30Day = '30-Day Streak';
+  static const String streak100Day = '100-Day Streak';
 
   // ─── Bottom Navigation ───
   static const String home = 'Home';
+
+  // ─── Friends ───
+  static const String friends = 'Friends';
+  static const String friendRequests = 'Friend Requests';
+  static const String findFriends = 'Find Friends';
+  static const String addFriend = 'Add Friend';
+  static const String removeFriend = 'Remove Friend';
+  static const String friendRequestSent = 'Friend request sent!';
+  static const String friendRequestAccepted = 'Friend request accepted!';
+  static const String friendRequestRejected = 'Friend request rejected.';
+  static const String noFriendsYet = 'No friends yet. Find and add friends!';
+  static const String noPendingRequests = 'No pending friend requests.';
+  static const String searchUsers = 'Search users by name...';
+  static const String friendsLeaderboard = 'Friends Leaderboard';
+  static const String pending = 'Pending';
+  static const String accept = 'Accept';
+  static const String reject = 'Reject';
+  static const String sentRequests = 'Sent Requests';
+  static const String receivedRequests = 'Received Requests';
+
+  // ─── Referral & Invite ───
+  static const String inviteFriends = 'Invite Friends';
+  static const String referralCode = 'Referral Code';
+  static const String yourReferralCode = 'Your Referral Code';
+  static const String shareInviteLink = 'Share Invite Link';
+  static const String enterReferralCode = 'Enter Referral Code';
+  static const String referralApplied = 'Referral code applied!';
+  static const String inviteMessage = 'Join me on SRP Health! Track your steps, compete with friends, and stay fit together. Use my referral code: ';
+  static const String copyCode = 'Copy Code';
+  static const String codeCopied = 'Code copied to clipboard!';
+
+  // ─── Leaderboard Status ───
+  static const String yourStatus = 'Your Status';
+  static const String topPerformer = 'Top Performer';
+  static const String topGroup = 'Top Group';
+  static const String mostConsistent = 'Most Consistent';
+  static const String rankUp = 'Rank Up';
+  static const String rankDown = 'Rank Down';
+  static const String rankSteady = 'Steady';
 }

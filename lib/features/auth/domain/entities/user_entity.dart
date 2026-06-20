@@ -8,6 +8,7 @@ class UserEntity {
   final String name;
   final String email;
   final String phone;
+  final bool phoneVerified;
   final String profileImage;
   final int totalSteps;
   final int currentStreak;
@@ -17,12 +18,19 @@ class UserEntity {
   final int currentRank;
   final int dailyGoal;
   final String? fcmToken;
+  final double consistencyScore;
+  final List<String> friendUids;
+  final List<String> friendRequestsSent;
+  final List<String> friendRequestsReceived;
+  final String referralCode;
+  final String? referredBy;
 
   const UserEntity({
     required this.uid,
     required this.name,
     required this.email,
     this.phone = '',
+    this.phoneVerified = false,
     this.profileImage = '',
     this.totalSteps = 0,
     this.currentStreak = 0,
@@ -32,6 +40,12 @@ class UserEntity {
     this.currentRank = 0,
     this.dailyGoal = 10000,
     this.fcmToken,
+    this.consistencyScore = 1.0,
+    this.friendUids = const [],
+    this.friendRequestsSent = const [],
+    this.friendRequestsReceived = const [],
+    this.referralCode = '',
+    this.referredBy,
   });
 
   /// Create a copy with updated fields.
@@ -40,6 +54,7 @@ class UserEntity {
     String? name,
     String? email,
     String? phone,
+    bool? phoneVerified,
     String? profileImage,
     int? totalSteps,
     int? currentStreak,
@@ -49,12 +64,19 @@ class UserEntity {
     int? currentRank,
     int? dailyGoal,
     String? fcmToken,
+    double? consistencyScore,
+    List<String>? friendUids,
+    List<String>? friendRequestsSent,
+    List<String>? friendRequestsReceived,
+    String? referralCode,
+    String? referredBy,
   }) {
     return UserEntity(
       uid: uid ?? this.uid,
       name: name ?? this.name,
       email: email ?? this.email,
       phone: phone ?? this.phone,
+      phoneVerified: phoneVerified ?? this.phoneVerified,
       profileImage: profileImage ?? this.profileImage,
       totalSteps: totalSteps ?? this.totalSteps,
       currentStreak: currentStreak ?? this.currentStreak,
@@ -64,6 +86,12 @@ class UserEntity {
       currentRank: currentRank ?? this.currentRank,
       dailyGoal: dailyGoal ?? this.dailyGoal,
       fcmToken: fcmToken ?? this.fcmToken,
+      consistencyScore: consistencyScore ?? this.consistencyScore,
+      friendUids: friendUids ?? this.friendUids,
+      friendRequestsSent: friendRequestsSent ?? this.friendRequestsSent,
+      friendRequestsReceived: friendRequestsReceived ?? this.friendRequestsReceived,
+      referralCode: referralCode ?? this.referralCode,
+      referredBy: referredBy ?? this.referredBy,
     );
   }
 

@@ -10,6 +10,7 @@ import 'package:step_sync/core/utils/validators.dart';
 import 'package:step_sync/core/widgets/custom_snackbar.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 import 'package:step_sync/features/auth/presentation/widgets/auth_text_field.dart';
+import 'package:step_sync/core/utils/firebase_error_parser.dart';
 
 /// Registration screen with name, email, and password.
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -25,6 +26,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _referralCodeController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -33,6 +35,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _referralCodeController.dispose();
     super.dispose();
   }
 
@@ -45,11 +48,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             name: _nameController.text.trim(),
             email: _emailController.text.trim(),
             password: _passwordController.text,
+            referralCode: _referralCodeController.text.trim(),
           );
-      if (mounted) context.go('/home');
+      if (mounted) {
+        context.go('/otp', extra: {'isLinking': true});
+      }
     } catch (e) {
       if (mounted) {
-        CustomSnackBar.showError(context, e.toString());
+        CustomSnackBar.showError(context, FirebaseErrorParser.parseAuthError(e));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -80,6 +86,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // App Banner
+                Center(
+                  child: Image.asset(
+                    'assets/images/app_banner.png',
+                    height: 80,
+                    fit: BoxFit.contain,
+                  ).animate().scale(
+                        begin: const Offset(0.8, 0.8),
+                        duration: 500.ms,
+                        curve: Curves.easeOutBack,
+                      ),
+                ),
+
+                const SizedBox(height: 32),
+
                 // Title
                 Text(
                   AppStrings.createAccount,
@@ -155,6 +176,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     _passwordController.text,
                   ),
                 ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1),
+
+                const SizedBox(height: 16),
+
+                // Referral Code
+                AuthTextField(
+                  controller: _referralCodeController,
+                  label: 'Referral Code (Optional)',
+                  hint: 'e.g., JOH1234',
+                  keyboardType: TextInputType.text,
+                  prefixIcon: Icons.card_giftcard_outlined,
+                  textCapitalization: TextCapitalization.characters,
+                ).animate().fadeIn(delay: 550.ms).slideY(begin: 0.1),
 
                 const SizedBox(height: 32),
 

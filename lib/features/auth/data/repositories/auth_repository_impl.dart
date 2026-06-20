@@ -70,12 +70,14 @@ class AuthRepositoryImpl implements AuthRepository {
     required String name,
     required String email,
     required String password,
+    String? referralCode,
   }) async {
     try {
       return await remoteDataSource.signUpWithEmail(
         name: name,
         email: email,
         password: password,
+        referralCode: referralCode,
       );
     } catch (e) {
       throw Exception(e.toString());
@@ -87,12 +89,14 @@ class AuthRepositoryImpl implements AuthRepository {
     required String phoneNumber,
     required Function(String) onCodeSent,
     required Function(String) onError,
+    Function(UserEntity)? onVerificationCompleted,
   }) async {
     try {
       await remoteDataSource.signInWithPhone(
         phoneNumber: phoneNumber,
         onCodeSent: onCodeSent,
         onError: onError,
+        onVerificationCompleted: onVerificationCompleted,
       );
     } catch (e) {
       throw Exception(e.toString());
@@ -165,6 +169,15 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> deleteAccount() async {
     try {
       await remoteDataSource.deleteAccount();
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  @override
+  Future<List<UserEntity>> getReferredUsers(String uid) async {
+    try {
+      return await remoteDataSource.getReferredUsers(uid);
     } catch (e) {
       throw Exception(e.toString());
     }

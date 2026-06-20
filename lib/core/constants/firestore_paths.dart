@@ -8,11 +8,14 @@ class FirestorePaths {
   static const String leaderboards = 'leaderboards';
   static const String achievements = 'achievements';
   static const String notifications = 'notifications';
+  static const String groups = 'groups';
+  static const String friendRequests = 'friend_requests';
 
   // ─── User Document Fields ───
   static const String fieldName = 'name';
   static const String fieldEmail = 'email';
   static const String fieldPhone = 'phone';
+  static const String fieldPhoneVerified = 'phoneVerified';
   static const String fieldProfileImage = 'profileImage';
   static const String fieldTotalSteps = 'totalSteps';
   static const String fieldCurrentStreak = 'currentStreak';
@@ -22,6 +25,12 @@ class FirestorePaths {
   static const String fieldCurrentRank = 'currentRank';
   static const String fieldDailyGoal = 'dailyGoal';
   static const String fieldFcmToken = 'fcmToken';
+  static const String fieldConsistencyScore = 'consistencyScore';
+  static const String fieldFriendUids = 'friendUids';
+  static const String fieldFriendRequestsSent = 'friendRequestsSent';
+  static const String fieldFriendRequestsReceived = 'friendRequestsReceived';
+  static const String fieldReferralCode = 'referralCode';
+  static const String fieldReferredBy = 'referredBy';
 
   // ─── Daily Steps Fields ───
   static const String fieldUid = 'uid';

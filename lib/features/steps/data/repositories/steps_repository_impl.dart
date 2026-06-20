@@ -1,37 +1,44 @@
-import 'package:step_sync/features/steps/data/datasources/pedometer_datasource.dart';
+import 'dart:async';
+
+import 'package:step_sync/features/steps/data/datasources/health_datasource.dart';
 import 'package:step_sync/features/steps/data/datasources/steps_local_datasource.dart';
 import 'package:step_sync/features/steps/data/datasources/steps_remote_datasource.dart';
 import 'package:step_sync/features/steps/data/models/daily_steps_model.dart';
 import 'package:step_sync/features/steps/domain/entities/daily_steps_entity.dart';
 import 'package:step_sync/features/steps/domain/repositories/steps_repository.dart';
 
-/// Implementation of StepsRepository.
+/// Implementation of StepsRepository using Health Connect.
 class StepsRepositoryImpl implements StepsRepository {
-  final PedometerDataSource _pedometerDataSource;
+  final HealthDataSource _healthDataSource;
   final StepsRemoteDataSource _remoteDataSource;
   final StepsLocalDataSource _localDataSource;
 
   StepsRepositoryImpl({
-    PedometerDataSource? pedometerDataSource,
+    HealthDataSource? healthDataSource,
     StepsRemoteDataSource? remoteDataSource,
     StepsLocalDataSource? localDataSource,
-  })  : _pedometerDataSource = pedometerDataSource ?? PedometerDataSource(),
+  })  : _healthDataSource = healthDataSource ?? HealthDataSource(),
         _remoteDataSource = remoteDataSource ?? StepsRemoteDataSource(),
         _localDataSource = localDataSource ?? StepsLocalDataSource();
 
   @override
-  Stream<int> get stepCountStream => _pedometerDataSource.stepCountStream;
+  Future<bool> checkHealthConnectAvailable() async {
+    return await _healthDataSource.checkHealthConnectAvailable();
+  }
 
   @override
-  Stream<String> get pedestrianStatusStream =>
-      _pedometerDataSource.pedestrianStatusStream;
+  Future<void> promptInstallHealthConnect() async {
+    await _healthDataSource.promptInstallHealthConnect();
+  }
 
   @override
-  bool get isPedometerAvailable => _pedometerDataSource.isAvailable;
+  Future<bool> checkAndRequestPermissions() async {
+    return await _healthDataSource.checkAndRequestPermissions();
+  }
 
   @override
-  Future<void> initializePedometer({int cachedStepsToday = 0}) async {
-    await _pedometerDataSource.initialize(cachedStepsToday: cachedStepsToday);
+  Future<int> fetchTodaySteps() async {
+    return await _healthDataSource.fetchTodaySteps();
   }
 
   @override
@@ -95,6 +102,6 @@ class StepsRepositoryImpl implements StepsRepository {
 
   @override
   void dispose() {
-    _pedometerDataSource.dispose();
+    // Nothing to dispose for Health Connect (it is polled).
   }
 }

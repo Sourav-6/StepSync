@@ -96,7 +96,7 @@ class SettingsScreen extends ConsumerWidget {
           _buildSettingTile(
             context,
             title: AppStrings.about,
-            subtitle: 'StepSync v${AppStrings.appVersion}',
+            subtitle: 'SRP Health v${AppStrings.appVersion}',
             icon: Icons.info_outline_rounded,
           ),
 

@@ -59,19 +59,21 @@ class CurrentUserNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
   }
 
   /// Sign in with Google.
-  Future<void> signInWithGoogle() async {
+  Future<UserEntity> signInWithGoogle() async {
     state = const AsyncValue.loading();
     try {
       final user = await _repository.signInWithGoogle();
       await _restoreDailySteps(user.uid);
       state = AsyncValue.data(user);
+      return user;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+      rethrow;
     }
   }
 
   /// Sign in with email and password.
-  Future<void> signInWithEmail({
+  Future<UserEntity> signInWithEmail({
     required String email,
     required String password,
   }) async {
@@ -83,16 +85,19 @@ class CurrentUserNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
       );
       await _restoreDailySteps(user.uid);
       state = AsyncValue.data(user);
+      return user;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+      rethrow;
     }
   }
 
   /// Sign up with email and password.
-  Future<void> signUpWithEmail({
+  Future<UserEntity> signUpWithEmail({
     required String name,
     required String email,
     required String password,
+    String? referralCode,
   }) async {
     state = const AsyncValue.loading();
     try {
@@ -100,10 +105,13 @@ class CurrentUserNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
         name: name,
         email: email,
         password: password,
+        referralCode: referralCode,
       );
       state = AsyncValue.data(user);
+      return user;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+      rethrow;
     }
   }
 
@@ -172,19 +180,26 @@ class PhoneAuthNotifier extends StateNotifier<PhoneAuthState> {
   /// Send OTP to phone number.
   Future<void> sendOtp(String phoneNumber) async {
     state = state.copyWith(isLoading: true, error: null);
-    await _repository.signInWithPhone(
-      phoneNumber: phoneNumber,
-      onCodeSent: (verificationId) {
-        state = state.copyWith(
-          isLoading: false,
-          codeSent: true,
-          verificationId: verificationId,
-        );
-      },
-      onError: (error) {
-        state = state.copyWith(isLoading: false, error: error);
-      },
-    );
+    try {
+      await _repository.signInWithPhone(
+        phoneNumber: phoneNumber,
+        onCodeSent: (verificationId) {
+          state = state.copyWith(
+            isLoading: false,
+            codeSent: true,
+            verificationId: verificationId,
+          );
+        },
+        onError: (error) {
+          state = state.copyWith(isLoading: false, error: error);
+        },
+        onVerificationCompleted: (user) {
+          state = state.copyWith(isLoading: false, user: user);
+        },
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
   }
 
   /// Verify OTP.

@@ -13,6 +13,7 @@ class AuthTextField extends StatefulWidget {
   final String? Function(String?)? validator;
   final TextCapitalization textCapitalization;
   final int maxLines;
+  final bool readOnly;
 
   const AuthTextField({
     super.key,
@@ -25,6 +26,7 @@ class AuthTextField extends StatefulWidget {
     this.validator,
     this.textCapitalization = TextCapitalization.none,
     this.maxLines = 1,
+    this.readOnly = false,
   });
 
   @override
@@ -54,6 +56,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
         const SizedBox(height: 8),
         TextFormField(
           controller: widget.controller,
+          readOnly: widget.readOnly,
           obscureText: widget.isPassword && _obscureText,
           keyboardType: widget.keyboardType,
           validator: widget.validator,
@@ -61,9 +64,9 @@ class _AuthTextFieldState extends State<AuthTextField> {
           maxLines: widget.isPassword ? 1 : widget.maxLines,
           style: GoogleFonts.inter(
             fontSize: 15,
-            color: isDark
-                ? AppColors.textDarkPrimary
-                : AppColors.textLightPrimary,
+            color: widget.readOnly
+                ? (isDark ? Colors.grey[600] : Colors.grey[400])
+                : (isDark ? AppColors.textDarkPrimary : AppColors.textLightPrimary),
           ),
           decoration: InputDecoration(
             hintText: widget.hint,

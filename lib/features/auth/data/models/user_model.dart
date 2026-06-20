@@ -10,6 +10,7 @@ class UserModel extends UserEntity {
     required super.name,
     required super.email,
     super.phone,
+    super.phoneVerified,
     super.profileImage,
     super.totalSteps,
     super.currentStreak,
@@ -19,6 +20,12 @@ class UserModel extends UserEntity {
     super.currentRank,
     super.dailyGoal,
     super.fcmToken,
+    super.consistencyScore,
+    super.friendUids,
+    super.friendRequestsSent,
+    super.friendRequestsReceived,
+    super.referralCode,
+    super.referredBy,
   });
 
   /// Create from Firestore document snapshot.
@@ -29,6 +36,7 @@ class UserModel extends UserEntity {
       name: data[FirestorePaths.fieldName] ?? '',
       email: data[FirestorePaths.fieldEmail] ?? '',
       phone: data[FirestorePaths.fieldPhone] ?? '',
+      phoneVerified: data[FirestorePaths.fieldPhoneVerified] ?? false,
       profileImage: data[FirestorePaths.fieldProfileImage] ?? '',
       totalSteps: data[FirestorePaths.fieldTotalSteps] ?? 0,
       currentStreak: data[FirestorePaths.fieldCurrentStreak] ?? 0,
@@ -40,6 +48,12 @@ class UserModel extends UserEntity {
       currentRank: data[FirestorePaths.fieldCurrentRank] ?? 0,
       dailyGoal: data[FirestorePaths.fieldDailyGoal] ?? 10000,
       fcmToken: data[FirestorePaths.fieldFcmToken],
+      consistencyScore: (data[FirestorePaths.fieldConsistencyScore] as num?)?.toDouble() ?? 0.0,
+      friendUids: List<String>.from(data[FirestorePaths.fieldFriendUids] ?? []),
+      friendRequestsSent: List<String>.from(data[FirestorePaths.fieldFriendRequestsSent] ?? []),
+      friendRequestsReceived: List<String>.from(data[FirestorePaths.fieldFriendRequestsReceived] ?? []),
+      referralCode: data[FirestorePaths.fieldReferralCode] ?? '',
+      referredBy: data[FirestorePaths.fieldReferredBy],
     );
   }
 
@@ -50,6 +64,7 @@ class UserModel extends UserEntity {
       name: map[FirestorePaths.fieldName] ?? '',
       email: map[FirestorePaths.fieldEmail] ?? '',
       phone: map[FirestorePaths.fieldPhone] ?? '',
+      phoneVerified: map[FirestorePaths.fieldPhoneVerified] ?? false,
       profileImage: map[FirestorePaths.fieldProfileImage] ?? '',
       totalSteps: map[FirestorePaths.fieldTotalSteps] ?? 0,
       currentStreak: map[FirestorePaths.fieldCurrentStreak] ?? 0,
@@ -59,6 +74,12 @@ class UserModel extends UserEntity {
       currentRank: map[FirestorePaths.fieldCurrentRank] ?? 0,
       dailyGoal: map[FirestorePaths.fieldDailyGoal] ?? 10000,
       fcmToken: map[FirestorePaths.fieldFcmToken],
+      consistencyScore: (map[FirestorePaths.fieldConsistencyScore] as num?)?.toDouble() ?? 0.0,
+      friendUids: List<String>.from(map[FirestorePaths.fieldFriendUids] ?? []),
+      friendRequestsSent: List<String>.from(map[FirestorePaths.fieldFriendRequestsSent] ?? []),
+      friendRequestsReceived: List<String>.from(map[FirestorePaths.fieldFriendRequestsReceived] ?? []),
+      referralCode: map[FirestorePaths.fieldReferralCode] ?? '',
+      referredBy: map[FirestorePaths.fieldReferredBy],
     );
   }
 
@@ -68,6 +89,7 @@ class UserModel extends UserEntity {
       FirestorePaths.fieldName: name,
       FirestorePaths.fieldEmail: email,
       FirestorePaths.fieldPhone: phone,
+      FirestorePaths.fieldPhoneVerified: phoneVerified,
       FirestorePaths.fieldProfileImage: profileImage,
       FirestorePaths.fieldTotalSteps: totalSteps,
       FirestorePaths.fieldCurrentStreak: currentStreak,
@@ -77,6 +99,12 @@ class UserModel extends UserEntity {
       FirestorePaths.fieldCurrentRank: currentRank,
       FirestorePaths.fieldDailyGoal: dailyGoal,
       FirestorePaths.fieldFcmToken: fcmToken,
+      FirestorePaths.fieldConsistencyScore: consistencyScore,
+      FirestorePaths.fieldFriendUids: friendUids,
+      FirestorePaths.fieldFriendRequestsSent: friendRequestsSent,
+      FirestorePaths.fieldFriendRequestsReceived: friendRequestsReceived,
+      FirestorePaths.fieldReferralCode: referralCode,
+      FirestorePaths.fieldReferredBy: referredBy,
     };
   }
 
@@ -87,6 +115,7 @@ class UserModel extends UserEntity {
       FirestorePaths.fieldName: name,
       FirestorePaths.fieldEmail: email,
       FirestorePaths.fieldPhone: phone,
+      FirestorePaths.fieldPhoneVerified: phoneVerified,
       FirestorePaths.fieldProfileImage: profileImage,
       FirestorePaths.fieldTotalSteps: totalSteps,
       FirestorePaths.fieldCurrentStreak: currentStreak,
@@ -96,6 +125,12 @@ class UserModel extends UserEntity {
       FirestorePaths.fieldCurrentRank: currentRank,
       FirestorePaths.fieldDailyGoal: dailyGoal,
       FirestorePaths.fieldFcmToken: fcmToken,
+      FirestorePaths.fieldConsistencyScore: consistencyScore,
+      FirestorePaths.fieldFriendUids: friendUids,
+      FirestorePaths.fieldFriendRequestsSent: friendRequestsSent,
+      FirestorePaths.fieldFriendRequestsReceived: friendRequestsReceived,
+      FirestorePaths.fieldReferralCode: referralCode,
+      FirestorePaths.fieldReferredBy: referredBy,
     };
   }
 
@@ -106,6 +141,7 @@ class UserModel extends UserEntity {
       name: entity.name,
       email: entity.email,
       phone: entity.phone,
+      phoneVerified: entity.phoneVerified,
       profileImage: entity.profileImage,
       totalSteps: entity.totalSteps,
       currentStreak: entity.currentStreak,
@@ -115,18 +151,33 @@ class UserModel extends UserEntity {
       currentRank: entity.currentRank,
       dailyGoal: entity.dailyGoal,
       fcmToken: entity.fcmToken,
+      consistencyScore: entity.consistencyScore,
+      friendUids: entity.friendUids,
+      friendRequestsSent: entity.friendRequestsSent,
+      friendRequestsReceived: entity.friendRequestsReceived,
+      referralCode: entity.referralCode,
+      referredBy: entity.referredBy,
     );
   }
 
-  /// Create a new user model for first-time registration.
   factory UserModel.newUser({
     required String uid,
     required String name,
     required String email,
     String phone = '',
     String profileImage = '',
+    String? referredBy,
   }) {
     final now = DateTime.now();
+    
+    // Generate a referral code (e.g., first 3 letters of name + last 4 of uid)
+    final sanitizedName = name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+    final namePrefix = sanitizedName.length >= 3 
+        ? sanitizedName.substring(0, 3).toUpperCase() 
+        : (sanitizedName.isNotEmpty ? sanitizedName.toUpperCase().padRight(3, 'X') : 'USR');
+    final uidSuffix = uid.length >= 4 ? uid.substring(uid.length - 4).toUpperCase() : '0000';
+    final generatedReferralCode = '$namePrefix$uidSuffix';
+
     return UserModel(
       uid: uid,
       name: name,
@@ -140,6 +191,9 @@ class UserModel extends UserEntity {
       lastLogin: now,
       currentRank: 0,
       dailyGoal: 10000,
+      consistencyScore: 0.0,
+      referralCode: generatedReferralCode,
+      referredBy: referredBy,
     );
   }
 }

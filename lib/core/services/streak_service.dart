@@ -127,7 +127,7 @@ class StreakService {
 
   /// Check and award achievements based on streak length.
   Future<void> checkStreakAchievements(String uid, int streakLength) async {
-    final milestones = {3: '3-Day Streak 🔥', 7: '7-Day Streak ⚡', 30: '30-Day Streak 🏅', 100: '100-Day Streak 🏆'};
+    final milestones = {3: '3-Day Streak', 7: '7-Day Streak', 30: '30-Day Streak', 100: '100-Day Streak'};
     if (milestones.containsKey(streakLength)) {
       await awardAchievement(
         uid, 

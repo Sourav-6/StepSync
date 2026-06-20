@@ -11,6 +11,7 @@ import 'package:step_sync/core/widgets/custom_snackbar.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 import 'package:step_sync/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:step_sync/features/auth/presentation/widgets/social_login_button.dart';
+import 'package:step_sync/core/utils/firebase_error_parser.dart';
 
 /// Login screen with email/password, Google, and phone auth options.
 class LoginScreen extends ConsumerStatefulWidget {
@@ -42,10 +43,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
-      if (mounted) context.go('/home');
+      if (mounted) {
+        context.go('/otp', extra: {'isLinking': true});
+      }
     } catch (e) {
       if (mounted) {
-        CustomSnackBar.showError(context, e.toString());
+        CustomSnackBar.showError(context, FirebaseErrorParser.parseAuthError(e));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -56,10 +59,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       await ref.read(currentUserProvider.notifier).signInWithGoogle();
-      if (mounted) context.go('/home');
+      if (mounted) {
+        context.go('/otp', extra: {'isLinking': true});
+      }
     } catch (e) {
       if (mounted) {
-        CustomSnackBar.showError(context, e.toString());
+        CustomSnackBar.showError(context, FirebaseErrorParser.parseAuthError(e));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -81,31 +86,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 const SizedBox(height: 40),
 
-                // Logo
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryBlue.withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        spreadRadius: 2,
+                // App Banner
+                Center(
+                  child: Image.asset(
+                    'assets/images/app_banner.png',
+                    height: 80,
+                    fit: BoxFit.contain,
+                  ).animate().scale(
+                        begin: const Offset(0.8, 0.8),
+                        duration: 500.ms,
+                        curve: Curves.easeOutBack,
                       ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.directions_walk_rounded,
-                    size: 32,
-                    color: Colors.white,
-                  ),
-                ).animate().scale(
-                      begin: const Offset(0.8, 0.8),
-                      duration: 500.ms,
-                      curve: Curves.easeOutBack,
-                    ),
+                ),
 
                 const SizedBox(height: 32),
 
@@ -257,7 +249,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   icon: Icons.phone_rounded,
                   onPressed: _isLoading
                       ? null
-                      : () => context.push('/otp'),
+                      : () => context.push('/otp', extra: {'isLinking': false}),
                 ).animate().fadeIn(delay: 800.ms).slideY(begin: 0.1),
 
                 const SizedBox(height: 32),

@@ -7,8 +7,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:step_sync/core/constants/app_colors.dart';
 import 'package:step_sync/core/constants/app_strings.dart';
 import 'package:step_sync/core/services/hive_service.dart';
+import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 
-/// Animated splash screen with logo and auto-navigation.
+/// Animated splash screen with a minimal GPay-style design.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -32,8 +33,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser != null) {
-      // User is already signed in, go straight to home
-      if (mounted) context.go('/home');
+      final userRepo = ref.read(authRepositoryProvider);
+      final userEntity = await userRepo.getCurrentUser();
+      
+      if (userEntity != null) {
+        if (userEntity.phoneVerified) {
+          if (mounted) context.go('/home');
+        } else {
+          if (mounted) context.go('/otp', extra: {'isLinking': true});
+        }
+      } else {
+        await ref.read(currentUserProvider.notifier).signOut();
+        if (mounted) context.go('/login');
+      }
     } else if (HiveService.onboardingComplete) {
       // User has seen onboarding before, go to login
       if (mounted) context.go('/login');
@@ -45,98 +57,53 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.darkBg,
-              Color(0xFF1A1A2E),
-              AppColors.primaryDark,
-            ],
-          ),
-        ),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Animated logo icon
+            // Minimal, flat logo icon
             Container(
-              width: 120,
-              height: 120,
+              width: 100,
+              height: 100,
               decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryBlue.withValues(alpha: 0.4),
-                    blurRadius: 30,
-                    spreadRadius: 5,
-                  ),
-                ],
+                color: AppColors.primaryBlue,
+                borderRadius: BorderRadius.circular(24),
               ),
               child: const Icon(
                 Icons.directions_walk_rounded,
-                size: 60,
+                size: 50,
                 color: Colors.white,
               ),
             )
                 .animate()
                 .scale(
-                  begin: const Offset(0.5, 0.5),
+                  begin: const Offset(0.8, 0.8),
                   end: const Offset(1, 1),
                   duration: 800.ms,
-                  curve: Curves.elasticOut,
+                  curve: Curves.easeOutBack,
                 )
                 .fadeIn(duration: 600.ms),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
 
-            // App name
+            // Clean app name
             Text(
               AppStrings.appName,
-              style: GoogleFonts.outfit(
-                fontSize: 42,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                letterSpacing: 2,
+              style: GoogleFonts.rubik(
+                fontSize: 32,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white : AppColors.textLightPrimary,
+                letterSpacing: 0.5,
               ),
             )
                 .animate()
-                .fadeIn(delay: 400.ms, duration: 600.ms)
-                .slideY(begin: 0.3, end: 0),
-
-            const SizedBox(height: 8),
-
-            // Tagline
-            Text(
-              AppStrings.appTagline,
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                color: AppColors.textDarkSecondary,
-                letterSpacing: 1,
-              ),
-            )
-                .animate()
-                .fadeIn(delay: 700.ms, duration: 600.ms)
-                .slideY(begin: 0.3, end: 0),
-
-            const SizedBox(height: 60),
-
-            // Loading indicator
-            SizedBox(
-              width: 40,
-              height: 40,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  AppColors.primaryLight.withValues(alpha: 0.7),
-                ),
-              ),
-            ).animate().fadeIn(delay: 1000.ms, duration: 400.ms),
+                .fadeIn(delay: 300.ms, duration: 600.ms)
+                .slideY(begin: 0.2, end: 0, curve: Curves.easeOut),
           ],
         ),
       ),

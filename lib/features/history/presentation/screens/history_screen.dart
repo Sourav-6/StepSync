@@ -34,51 +34,42 @@ class HistoryScreen extends ConsumerWidget {
       body: Column(
         children: [
           // Tab bar
-          Padding(
-            padding: const EdgeInsets.symmetric(
+          Container(
+            margin: const EdgeInsets.symmetric(
               horizontal: AppDimensions.screenPadding,
               vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(30),
             ),
             child: Row(
               children: HistoryTab.values.map((t) {
                 final isSelected = t == tab;
                 return Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: GestureDetector(
-                      onTap: () =>
-                          ref.read(historyTabProvider.notifier).state = t,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
+                  child: GestureDetector(
+                    onTap: () =>
+                        ref.read(historyTabProvider.notifier).state = t,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.primaryBlue
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(26),
+                      ),
+                      child: Text(
+                        _tabLabel(t),
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                           color: isSelected
-                              ? AppColors.primaryBlue
+                              ? Colors.white
                               : (isDark
-                                  ? AppColors.darkSurface
-                                  : AppColors.lightCard),
-                          borderRadius:
-                              BorderRadius.circular(AppDimensions.radiusMd),
-                          border: Border.all(
-                            color: isSelected
-                                ? AppColors.primaryBlue
-                                : (isDark
-                                    ? AppColors.darkBorder.withValues(alpha: 0.3)
-                                    : AppColors.lightBorder),
-                          ),
-                        ),
-                        child: Text(
-                          _tabLabel(t),
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: isSelected
-                                ? Colors.white
-                                : (isDark
-                                    ? AppColors.textDarkSecondary
-                                    : AppColors.textLightSecondary),
-                          ),
+                                  ? AppColors.textDarkSecondary
+                                  : AppColors.textLightSecondary),
                         ),
                       ),
                     ),
@@ -186,13 +177,8 @@ class _DailyView extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        border: Border.all(
-          color: isDark
-              ? AppColors.darkBorder.withValues(alpha: 0.2)
-              : AppColors.lightBorder.withValues(alpha: 0.5),
-        ),
+        color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
         children: [
@@ -269,13 +255,8 @@ class _WeeklyView extends ConsumerWidget {
                 height: AppDimensions.chartHeight + 40,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-                  border: Border.all(
-                    color: isDark
-                        ? AppColors.darkBorder.withValues(alpha: 0.2)
-                        : AppColors.lightBorder.withValues(alpha: 0.5),
-                  ),
+                  color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(24),
                 ),
                 child: _buildBarChart(days, isDark),
               ).animate().fadeIn(duration: 500.ms),
@@ -444,13 +425,8 @@ class _WeeklyView extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        border: Border.all(
-          color: isDark
-              ? AppColors.darkBorder.withValues(alpha: 0.2)
-              : AppColors.lightBorder.withValues(alpha: 0.5),
-        ),
+        color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -520,13 +496,8 @@ class _MonthlyView extends ConsumerWidget {
                 height: AppDimensions.chartHeight + 40,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-                  border: Border.all(
-                    color: isDark
-                        ? AppColors.darkBorder.withValues(alpha: 0.2)
-                        : AppColors.lightBorder.withValues(alpha: 0.5),
-                  ),
+                  color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(24),
                 ),
                 child: _buildLineChart(days, isDark),
               ).animate().fadeIn(duration: 500.ms),
@@ -705,13 +676,8 @@ class _MonthlyView extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        border: Border.all(
-          color: isDark
-              ? AppColors.darkBorder.withValues(alpha: 0.2)
-              : AppColors.lightBorder.withValues(alpha: 0.5),
-        ),
+        color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -11,10 +11,15 @@ import 'package:step_sync/features/auth/presentation/screens/register_screen.dar
 import 'package:step_sync/features/auth/presentation/screens/splash_screen.dart';
 import 'package:step_sync/features/home/presentation/screens/home_screen.dart';
 import 'package:step_sync/features/history/presentation/screens/history_screen.dart';
+import 'package:step_sync/features/groups/presentation/screens/groups_screen.dart';
 import 'package:step_sync/features/leaderboard/presentation/screens/leaderboard_screen.dart';
 import 'package:step_sync/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:step_sync/features/profile/presentation/screens/profile_screen.dart';
 import 'package:step_sync/features/profile/presentation/screens/settings_screen.dart';
+import 'package:step_sync/features/friends/presentation/screens/friends_screen.dart';
+import 'package:step_sync/features/friends/presentation/screens/friends_leaderboard_screen.dart';
+import 'package:step_sync/features/friends/presentation/screens/invite_friends_screen.dart';
+import 'package:step_sync/features/profile/presentation/screens/my_referrals_screen.dart';
 
 /// GoRouter configuration for StepSync navigation.
 final routerProvider = Provider<GoRouter>((ref) {
@@ -44,7 +49,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/otp',
-        builder: (context, state) => const OtpVerificationScreen(),
+        builder: (context, state) {
+          final Map<String, dynamic>? extra = state.extra as Map<String, dynamic>?;
+          return OtpVerificationScreen(
+            phoneNumber: extra?['phone'] as String?,
+            isLinking: extra?['isLinking'] as bool? ?? false,
+          );
+        },
       ),
 
       // ─── Main App (Shell with Bottom Navigation) ───
@@ -66,6 +77,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const HistoryScreen(),
           ),
           GoRoute(
+            path: '/groups',
+            builder: (context, state) => const GroupsScreen(),
+          ),
+          GoRoute(
             path: '/profile',
             builder: (context, state) => const ProfileScreen(),
           ),
@@ -80,6 +95,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/edit-profile',
         builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: '/my-referrals',
+        builder: (context, state) => const MyReferralsScreen(),
+      ),
+
+      // ─── Friends Routes ───
+      GoRoute(
+        path: '/friends',
+        builder: (context, state) => const FriendsScreen(),
+      ),
+      GoRoute(
+        path: '/friends/leaderboard',
+        builder: (context, state) => const FriendsLeaderboardScreen(),
+      ),
+      GoRoute(
+        path: '/friends/invite',
+        builder: (context, state) => const InviteFriendsScreen(),
       ),
     ],
   );
@@ -132,6 +165,12 @@ class _MainShell extends StatelessWidget {
                   label: 'History',
                   isSelected: location == '/history',
                   onTap: () => context.go('/history'),
+                ),
+                _NavItem(
+                  icon: Icons.groups_rounded,
+                  label: 'Groups',
+                  isSelected: location == '/groups',
+                  onTap: () => context.go('/groups'),
                 ),
                 _NavItem(
                   icon: Icons.person_rounded,

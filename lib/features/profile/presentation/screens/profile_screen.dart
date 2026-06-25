@@ -176,7 +176,7 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         GoldenStarBadge(
-                          rating: user.starRating,
+                          rating: user.monthlyAvgStarRating,
                           fontSize: 14,
                           iconSize: 14,
                         ),

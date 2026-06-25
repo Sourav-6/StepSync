@@ -452,8 +452,13 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen> {
                           padding: const EdgeInsets.only(top: 4.0),
                           child: Row(
                             children: [
-                              Text('${isMemberAdmin ? 'Admin' : 'Member'} • ${Formatters.formatNumber(memberData.todaySteps)} / ${Formatters.formatNumber(memberData.dailyGoal)} steps'),
-                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${isMemberAdmin ? 'Admin' : 'Member'} • ${Formatters.formatNumber(memberData.todaySteps)} / ${Formatters.formatNumber(memberData.dailyGoal)} steps',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
                               GoldenStarBadge(rating: memberData.starRating, fontSize: 12, iconSize: 12),
                             ],
                           ),

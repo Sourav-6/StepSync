@@ -10,6 +10,8 @@ class LeaderboardEntry {
   final int rank;
   final double consistencyScore;
   final double starRating;
+  final double weeklyAvgStarRating;
+  final double monthlyAvgStarRating;
 
   const LeaderboardEntry({
     required this.uid,
@@ -19,5 +21,7 @@ class LeaderboardEntry {
     required this.rank,
     this.consistencyScore = 0.0,
     this.starRating = 0.0,
+    this.weeklyAvgStarRating = 0.0,
+    this.monthlyAvgStarRating = 0.0,
   });
 }

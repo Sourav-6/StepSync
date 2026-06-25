@@ -28,6 +28,8 @@ class UserModel extends UserEntity {
     super.referredBy,
     super.starRating,
     super.referralBagStars,
+    super.weeklyAvgStarRating,
+    super.monthlyAvgStarRating,
   });
 
   /// Create from Firestore document snapshot.
@@ -58,6 +60,8 @@ class UserModel extends UserEntity {
       referredBy: data[FirestorePaths.fieldReferredBy],
       starRating: (data[FirestorePaths.fieldStarRating] as num?)?.toDouble() ?? 0.0,
       referralBagStars: (data[FirestorePaths.fieldReferralBagStars] as num?)?.toInt() ?? 0,
+      weeklyAvgStarRating: (data['weeklyAvgStarRating'] as num?)?.toDouble() ?? 0.0,
+      monthlyAvgStarRating: (data['monthlyAvgStarRating'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -86,6 +90,8 @@ class UserModel extends UserEntity {
       referredBy: map[FirestorePaths.fieldReferredBy],
       starRating: (map[FirestorePaths.fieldStarRating] as num?)?.toDouble() ?? 0.0,
       referralBagStars: (map[FirestorePaths.fieldReferralBagStars] as num?)?.toInt() ?? 0,
+      weeklyAvgStarRating: (map['weeklyAvgStarRating'] as num?)?.toDouble() ?? 0.0,
+      monthlyAvgStarRating: (map['monthlyAvgStarRating'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -113,6 +119,8 @@ class UserModel extends UserEntity {
       FirestorePaths.fieldReferredBy: referredBy,
       FirestorePaths.fieldStarRating: starRating,
       FirestorePaths.fieldReferralBagStars: referralBagStars,
+      'weeklyAvgStarRating': weeklyAvgStarRating,
+      'monthlyAvgStarRating': monthlyAvgStarRating,
     };
   }
 
@@ -141,6 +149,8 @@ class UserModel extends UserEntity {
       FirestorePaths.fieldReferredBy: referredBy,
       FirestorePaths.fieldStarRating: starRating,
       FirestorePaths.fieldReferralBagStars: referralBagStars,
+      'weeklyAvgStarRating': weeklyAvgStarRating,
+      'monthlyAvgStarRating': monthlyAvgStarRating,
     };
   }
 

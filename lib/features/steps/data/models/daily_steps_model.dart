@@ -10,6 +10,7 @@ class DailyStepsModel extends DailyStepsEntity {
     required super.steps,
     required super.distance,
     required super.calories,
+    super.starRating = 0.0,
     super.timestamp,
   });
 
@@ -22,6 +23,7 @@ class DailyStepsModel extends DailyStepsEntity {
       steps: data[FirestorePaths.fieldSteps] ?? 0,
       distance: (data[FirestorePaths.fieldDistance] ?? 0).toDouble(),
       calories: (data[FirestorePaths.fieldCalories] ?? 0).toDouble(),
+      starRating: (data[FirestorePaths.fieldStarRating] ?? 0).toDouble(),
       timestamp:
           (data[FirestorePaths.fieldTimestamp] as Timestamp?)?.toDate(),
     );
@@ -35,6 +37,7 @@ class DailyStepsModel extends DailyStepsEntity {
       steps: map[FirestorePaths.fieldSteps] ?? 0,
       distance: (map[FirestorePaths.fieldDistance] ?? 0).toDouble(),
       calories: (map[FirestorePaths.fieldCalories] ?? 0).toDouble(),
+      starRating: (map[FirestorePaths.fieldStarRating] ?? 0).toDouble(),
       timestamp: map[FirestorePaths.fieldTimestamp] != null
           ? DateTime.tryParse(map[FirestorePaths.fieldTimestamp].toString())
           : null,
@@ -49,6 +52,7 @@ class DailyStepsModel extends DailyStepsEntity {
       FirestorePaths.fieldSteps: steps,
       FirestorePaths.fieldDistance: distance,
       FirestorePaths.fieldCalories: calories,
+      FirestorePaths.fieldStarRating: starRating,
       FirestorePaths.fieldTimestamp: Timestamp.now(),
     };
   }
@@ -61,15 +65,17 @@ class DailyStepsModel extends DailyStepsEntity {
       FirestorePaths.fieldSteps: steps,
       FirestorePaths.fieldDistance: distance,
       FirestorePaths.fieldCalories: calories,
+      FirestorePaths.fieldStarRating: starRating,
       FirestorePaths.fieldTimestamp: timestamp?.toIso8601String(),
     };
   }
 
-  /// Create from entity with calculated metrics.
+  /// Create from steps with calculated metrics.
   factory DailyStepsModel.fromSteps({
     required String uid,
     required String date,
     required int steps,
+    double starRating = 0.0,
   }) {
     return DailyStepsModel(
       uid: uid,
@@ -77,6 +83,7 @@ class DailyStepsModel extends DailyStepsEntity {
       steps: steps,
       distance: steps * 0.75 / 1000, // km
       calories: steps * 0.04, // kcal
+      starRating: starRating,
       timestamp: DateTime.now(),
     );
   }

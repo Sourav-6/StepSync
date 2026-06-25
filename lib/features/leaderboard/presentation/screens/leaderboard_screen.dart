@@ -303,10 +303,22 @@ class _LeaderboardTile extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 if (ref.read(leaderboardFilterProvider) != LeaderboardFilter.consistency)
-                  GoldenStarBadge(
-                    rating: entry.starRating,
-                    fontSize: 12,
-                    iconSize: 12,
+                  Builder(
+                    builder: (context) {
+                      final filter = ref.read(leaderboardFilterProvider);
+                      double displayRating = entry.starRating;
+                      if (filter == LeaderboardFilter.thisWeek) {
+                        displayRating = entry.weeklyAvgStarRating;
+                      } else if (filter == LeaderboardFilter.thisMonth) {
+                        displayRating = entry.monthlyAvgStarRating;
+                      }
+                      
+                      return GoldenStarBadge(
+                        rating: displayRating,
+                        fontSize: 12,
+                        iconSize: 12,
+                      );
+                    },
                   ),
               ],
             ),

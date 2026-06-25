@@ -16,9 +16,10 @@ final topConsistentPerformerProvider = StreamProvider<LeaderboardEntryModel?>((r
   return ds.getConsistencyLeaderboardStream(limit: 1).map((list) => list.isNotEmpty ? list.first : null);
 });
 
-final topGroupProvider = StreamProvider<GroupModel?>((ref) {
+final topGroupProvider = FutureProvider<GroupModel?>((ref) async {
   final ds = ref.watch(leaderboardRemoteProvider);
-  return ds.getTopGroupsStream(limit: 1).map((list) => list.isNotEmpty ? list.first : null);
+  final list = await ds.getMonthlyTopGroups(limit: 1);
+  return list.isNotEmpty ? list.first : null;
 });
 
 class DashboardHighlights extends ConsumerWidget {
@@ -47,7 +48,7 @@ class DashboardHighlights extends ConsumerWidget {
                 data: (winner) => _HighlightCard(
                   title: 'Most Consistent',
                   name: winner?.name ?? 'No data',
-                  value: winner != null ? '${winner.starRating.toStringAsFixed(1)}★ rating' : '-',
+                  value: winner != null ? '${(winner.consistencyScore * 5.0).toStringAsFixed(1)}★ rating' : '-',
                   icon: Icons.star_rounded,
                   color: AppColors.primaryBlue,
                 ),

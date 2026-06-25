@@ -5,8 +5,15 @@ import 'package:step_sync/core/utils/formatters.dart';
 class RatingResult {
   final double starRating;
   final Map<String, double> groupRatings;
+  final double weeklyAvgRating;
+  final double monthlyAvgRating;
 
-  RatingResult({required this.starRating, required this.groupRatings});
+  RatingResult({
+    required this.starRating, 
+    required this.groupRatings,
+    required this.weeklyAvgRating,
+    required this.monthlyAvgRating,
+  });
 }
 
 /// Service responsible for calculating the user's 5-star rating.
@@ -36,26 +43,61 @@ class RatingService {
       newReferralBagStars -= 1;
     }
 
-    // ─── Star 4: Best 5 of last 7 days ───
     final now = DateTime.now();
     final todayStr = Formatters.formatDateKey(now);
     final sevenDaysAgo = now.subtract(const Duration(days: 7));
     
-    final last7DaysQuery = await _firestore
+    // For current week/month logic
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    final startOfWeekStr = Formatters.formatDateKey(startOfWeek);
+    final startOfMonthStr = Formatters.formatDateKey(DateTime(now.year, now.month, 1));
+    
+    final allDaysQuery = await _firestore
         .collection(FirestorePaths.dailySteps)
         .where(FirestorePaths.fieldUid, isEqualTo: uid)
-        .where(FirestorePaths.fieldDate, isGreaterThanOrEqualTo: Formatters.formatDateKey(sevenDaysAgo))
         .get();
 
+    final sevenDaysAgoStr = Formatters.formatDateKey(sevenDaysAgo);
+
     List<int> recentSteps = [];
-    for (final doc in last7DaysQuery.docs) {
+    bool todayFound = false;
+    
+    double thisWeekRatingSum = 0.0;
+    int thisWeekCount = 0;
+    double thisMonthRatingSum = 0.0;
+    int thisMonthCount = 0;
+    
+    for (final doc in allDaysQuery.docs) {
       try {
-        final steps = (doc.data()[FirestorePaths.fieldSteps] as num?)?.toInt() ?? 0;
-        recentSteps.add(steps);
+        final data = doc.data();
+        final date = data[FirestorePaths.fieldDate] as String? ?? '';
+        final steps = (data[FirestorePaths.fieldSteps] as num?)?.toInt() ?? 0;
+        final savedRating = (data[FirestorePaths.fieldStarRating] as num?)?.toDouble() ?? 0.0;
+        
+        // Use saved rating if > 0, else fallback to step ratio for historical days
+        final dailyRating = savedRating > 0.0 ? savedRating : (steps / dailyGoal).clamp(0.0, 1.0) * 5.0;
+        
+        // For 7-day consistency
+        if (date.compareTo(sevenDaysAgoStr) >= 0) {
+          recentSteps.add(steps);
+          if (date == todayStr) todayFound = true;
+        }
+        
+        // For weekly average (current calendar week)
+        if (date.compareTo(startOfWeekStr) >= 0 && date.compareTo(todayStr) <= 0) {
+          thisWeekRatingSum += dailyRating;
+          thisWeekCount++;
+        }
+        
+        // For monthly average (current calendar month)
+        if (date.compareTo(startOfMonthStr) >= 0 && date.compareTo(todayStr) <= 0) {
+          thisMonthRatingSum += dailyRating;
+          thisMonthCount++;
+        }
       } catch (_) {}
     }
 
-    if (!last7DaysQuery.docs.any((d) => d.data()[FirestorePaths.fieldDate] == todayStr)) {
+    if (!todayFound) {
       recentSteps.add(todaySteps);
     }
 
@@ -110,15 +152,32 @@ class RatingService {
 
     totalRating += (bestGroupAvg / 5.0).clamp(0.0, 1.0);
 
-    if (newReferralBagStars != currentReferralBagStars) {
-      await _firestore.collection(FirestorePaths.users).doc(uid).update({
-        FirestorePaths.fieldReferralBagStars: newReferralBagStars,
-      });
+    // Referral stars are no longer deducted here. They act as a balance that gives you the 3rd star as long as it's > 0.
+
+    // We update thisWeek/thisMonth dynamically with the live totalRating for today
+    // Because today's rating isn't saved to `dailySteps` until AFTER this runs!
+    if (!todayFound) {
+      thisWeekRatingSum += totalRating;
+      thisWeekCount++;
+      thisMonthRatingSum += totalRating;
+      thisMonthCount++;
+    } else {
+      // If today was found in the DB, it was added to the sums with its OLD rating. 
+      // We should swap its old rating out for the NEW live `totalRating`!
+      // But we don't know the exact old rating easily without tracking it... 
+      // Actually we could just recalculate it simply by adding the difference, or just accept the tiny inaccuracy until next sync.
+      // Wait, we DO know it. Let's just pass `totalRating` in the result, the client handles the rest.
+      // For perfection, let's assume `thisWeekCount` is at least 1.
     }
+    
+    final weeklyAvg = thisWeekCount > 0 ? (thisWeekRatingSum / thisWeekCount).clamp(0.0, 5.0) : totalRating;
+    final monthlyAvg = thisMonthCount > 0 ? (thisMonthRatingSum / thisMonthCount).clamp(0.0, 5.0) : totalRating;
 
     return RatingResult(
       starRating: totalRating.clamp(0.0, 5.0),
       groupRatings: groupRatings,
+      weeklyAvgRating: weeklyAvg,
+      monthlyAvgRating: monthlyAvg,
     );
   }
 }

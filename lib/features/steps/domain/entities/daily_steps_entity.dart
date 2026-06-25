@@ -8,6 +8,7 @@ class DailyStepsEntity {
   final int steps;
   final double distance; // in km
   final double calories; // in kcal
+  final double starRating; // final daily rating (0.0 to 5.0)
   final DateTime? timestamp;
 
   const DailyStepsEntity({
@@ -16,6 +17,7 @@ class DailyStepsEntity {
     required this.steps,
     required this.distance,
     required this.calories,
+    this.starRating = 0.0,
     this.timestamp,
   });
 
@@ -25,6 +27,7 @@ class DailyStepsEntity {
     int? steps,
     double? distance,
     double? calories,
+    double? starRating,
     DateTime? timestamp,
   }) {
     return DailyStepsEntity(
@@ -33,6 +36,7 @@ class DailyStepsEntity {
       steps: steps ?? this.steps,
       distance: distance ?? this.distance,
       calories: calories ?? this.calories,
+      starRating: starRating ?? this.starRating,
       timestamp: timestamp ?? this.timestamp,
     );
   }

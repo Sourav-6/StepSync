@@ -26,6 +26,8 @@ class UserEntity {
   final String? referredBy;
   final double starRating;
   final int referralBagStars;
+  final double weeklyAvgStarRating;
+  final double monthlyAvgStarRating;
 
   const UserEntity({
     required this.uid,
@@ -50,6 +52,8 @@ class UserEntity {
     this.referredBy,
     this.starRating = 0.0,
     this.referralBagStars = 0,
+    this.weeklyAvgStarRating = 0.0,
+    this.monthlyAvgStarRating = 0.0,
   });
 
   /// Create a copy with updated fields.
@@ -76,6 +80,8 @@ class UserEntity {
     String? referredBy,
     double? starRating,
     int? referralBagStars,
+    double? weeklyAvgStarRating,
+    double? monthlyAvgStarRating,
   }) {
     return UserEntity(
       uid: uid ?? this.uid,
@@ -100,6 +106,8 @@ class UserEntity {
       referredBy: referredBy ?? this.referredBy,
       starRating: starRating ?? this.starRating,
       referralBagStars: referralBagStars ?? this.referralBagStars,
+      weeklyAvgStarRating: weeklyAvgStarRating ?? this.weeklyAvgStarRating,
+      monthlyAvgStarRating: monthlyAvgStarRating ?? this.monthlyAvgStarRating,
     );
   }
 

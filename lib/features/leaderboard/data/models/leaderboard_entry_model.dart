@@ -12,6 +12,8 @@ class LeaderboardEntryModel extends LeaderboardEntry {
     required super.rank,
     super.consistencyScore,
     super.starRating,
+    super.weeklyAvgStarRating,
+    super.monthlyAvgStarRating,
   });
 
   /// Create from a Firestore user document (all-time leaderboard).
@@ -25,6 +27,8 @@ class LeaderboardEntryModel extends LeaderboardEntry {
       rank: rank,
       consistencyScore: (data[FirestorePaths.fieldConsistencyScore] as num?)?.toDouble() ?? 0.0,
       starRating: (data[FirestorePaths.fieldStarRating] as num?)?.toDouble() ?? 0.0,
+      weeklyAvgStarRating: (data['weeklyAvgStarRating'] as num?)?.toDouble() ?? 0.0,
+      monthlyAvgStarRating: (data['monthlyAvgStarRating'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -32,8 +36,9 @@ class LeaderboardEntryModel extends LeaderboardEntry {
   factory LeaderboardEntryModel.fromDailySteps(
     Map<String, dynamic> userData,
     int steps,
-    int rank,
-  ) {
+    int rank, {
+    double? calculatedStarRating,
+  }) {
     return LeaderboardEntryModel(
       uid: userData['uid'] ?? '',
       name: userData[FirestorePaths.fieldName] ?? '',
@@ -41,7 +46,9 @@ class LeaderboardEntryModel extends LeaderboardEntry {
       steps: steps,
       rank: rank,
       consistencyScore: (userData[FirestorePaths.fieldConsistencyScore] as num?)?.toDouble() ?? 0.0,
-      starRating: (userData[FirestorePaths.fieldStarRating] as num?)?.toDouble() ?? 0.0,
+      starRating: calculatedStarRating ?? (userData[FirestorePaths.fieldStarRating] as num?)?.toDouble() ?? 0.0,
+      weeklyAvgStarRating: (userData['weeklyAvgStarRating'] as num?)?.toDouble() ?? 0.0,
+      monthlyAvgStarRating: (userData['monthlyAvgStarRating'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }

@@ -79,6 +79,19 @@ class LeaderboardRemoteDataSource {
     return _getAggregatedLeaderboard(dates, limit: limit);
   }
 
+  /// Get this month's consistency leaderboard (aggregated, sorted by star rating).
+  Future<List<LeaderboardEntryModel>> getMonthlyConsistencyLeaderboard({
+    int limit = 50,
+  }) async {
+    final now = DateTime.now();
+    final dates = List.generate(
+      now.day,
+      (i) => Formatters.formatDateKey(DateTime(now.year, now.month, i + 1)),
+    );
+
+    return _getAggregatedLeaderboard(dates, limit: limit, sortByStarRating: true);
+  }
+
   /// Get last month's leaderboard (aggregated).
   Future<List<LeaderboardEntryModel>> getLastMonthLeaderboard({
     int limit = 50,
@@ -93,6 +106,137 @@ class LeaderboardRemoteDataSource {
     );
 
     return _getAggregatedLeaderboard(dates, limit: limit);
+  }
+
+  /// Get last month's top groups leaderboard.
+  Future<List<GroupModel>> getLastMonthTopGroups({
+    int limit = 10,
+  }) async {
+    final now = DateTime.now();
+    final previousMonth = DateTime(now.year, now.month - 1, 1);
+    final daysInPreviousMonth = DateTime(now.year, now.month, 0).day;
+
+    final dates = List.generate(
+      daysInPreviousMonth,
+      (i) => Formatters.formatDateKey(DateTime(previousMonth.year, previousMonth.month, i + 1)),
+    );
+
+    // 1. Get all public groups
+    final groupsQuery = await _firestore
+        .collection(FirestorePaths.groups)
+        .where('isPublic', isEqualTo: true)
+        .get();
+        
+    final List<GroupModel> groups = groupsQuery.docs.map((doc) => GroupModel.fromFirestore(doc)).toList();
+
+    // 2. Fetch all daily steps for the last month
+    final Map<String, int> userSteps = {};
+    for (var i = 0; i < dates.length; i += 10) {
+      final chunk = dates.sublist(i, i + 10 > dates.length ? dates.length : i + 10);
+      final stepsQuery = await _firestore
+          .collection(FirestorePaths.dailySteps)
+          .where(FirestorePaths.fieldDate, whereIn: chunk)
+          .get();
+
+      for (final doc in stepsQuery.docs) {
+        final uid = doc.data()[FirestorePaths.fieldUid] as String;
+        final steps = doc.data()[FirestorePaths.fieldSteps] as int;
+        userSteps[uid] = (userSteps[uid] ?? 0) + steps;
+      }
+    }
+
+    // 3. Re-calculate total steps for each group based ONLY on last month's steps
+    final List<GroupModel> monthlyGroups = [];
+    for (final group in groups) {
+      int groupMonthlySteps = 0;
+      for (final uid in group.memberUids) {
+        groupMonthlySteps += userSteps[uid] ?? 0;
+      }
+      
+      monthlyGroups.add(GroupModel(
+        groupId: group.groupId,
+        name: group.name,
+        description: group.description,
+        adminUids: group.adminUids,
+        memberUids: group.memberUids,
+        totalSteps: groupMonthlySteps,
+        createdAt: group.createdAt,
+        isPublic: group.isPublic,
+      ));
+    }
+
+    // 4. Sort by average steps per member descending
+    monthlyGroups.sort((a, b) {
+      final avgA = a.memberUids.isNotEmpty ? a.totalSteps / a.memberUids.length : 0.0;
+      final avgB = b.memberUids.isNotEmpty ? b.totalSteps / b.memberUids.length : 0.0;
+      return avgB.compareTo(avgA);
+    });
+
+    return monthlyGroups.take(limit).toList();
+  }
+
+  /// Get this month's top groups leaderboard.
+  Future<List<GroupModel>> getMonthlyTopGroups({
+    int limit = 10,
+  }) async {
+    final now = DateTime.now();
+    final dates = List.generate(
+      now.day,
+      (i) => Formatters.formatDateKey(DateTime(now.year, now.month, i + 1)),
+    );
+
+    // 1. Get all public groups
+    final groupsQuery = await _firestore
+        .collection(FirestorePaths.groups)
+        .where('isPublic', isEqualTo: true)
+        .get();
+        
+    final List<GroupModel> groups = groupsQuery.docs.map((doc) => GroupModel.fromFirestore(doc)).toList();
+
+    // 2. Fetch all daily steps for this month
+    final Map<String, int> userSteps = {};
+    for (var i = 0; i < dates.length; i += 10) {
+      final chunk = dates.sublist(i, i + 10 > dates.length ? dates.length : i + 10);
+      final stepsQuery = await _firestore
+          .collection(FirestorePaths.dailySteps)
+          .where(FirestorePaths.fieldDate, whereIn: chunk)
+          .get();
+
+      for (final doc in stepsQuery.docs) {
+        final uid = doc.data()[FirestorePaths.fieldUid] as String;
+        final steps = doc.data()[FirestorePaths.fieldSteps] as int;
+        userSteps[uid] = (userSteps[uid] ?? 0) + steps;
+      }
+    }
+
+    // 3. Re-calculate total steps for each group based ONLY on this month's steps
+    final List<GroupModel> monthlyGroups = [];
+    for (final group in groups) {
+      int groupMonthlySteps = 0;
+      for (final uid in group.memberUids) {
+        groupMonthlySteps += userSteps[uid] ?? 0;
+      }
+      
+      monthlyGroups.add(GroupModel(
+        groupId: group.groupId,
+        name: group.name,
+        description: group.description,
+        adminUids: group.adminUids,
+        memberUids: group.memberUids,
+        totalSteps: groupMonthlySteps,
+        createdAt: group.createdAt,
+        isPublic: group.isPublic,
+      ));
+    }
+
+    // 4. Sort by average steps per member descending
+    monthlyGroups.sort((a, b) {
+      final avgA = a.memberUids.isNotEmpty ? a.totalSteps / a.memberUids.length : 0.0;
+      final avgB = b.memberUids.isNotEmpty ? b.totalSteps / b.memberUids.length : 0.0;
+      return avgB.compareTo(avgA);
+    });
+
+    return monthlyGroups.take(limit).toList();
   }
 
   /// Get top groups leaderboard based on average steps per member as a real-time stream.
@@ -171,10 +315,13 @@ class LeaderboardRemoteDataSource {
   Future<List<LeaderboardEntryModel>> _getAggregatedLeaderboard(
     List<String> dates, {
     int limit = 50,
+    bool sortByStarRating = false,
   }) async {
     if (dates.isEmpty) return [];
 
     final Map<String, int> userSteps = {};
+    final Map<String, double> userRatingSum = {};
+    final Map<String, int> userRatingCount = {};
 
     // Firestore 'whereIn' is limited to 10 items, so chunk the dates
     for (var i = 0; i < dates.length; i += 10) {
@@ -189,12 +336,29 @@ class LeaderboardRemoteDataSource {
         final uid = doc.data()[FirestorePaths.fieldUid] as String;
         final steps = doc.data()[FirestorePaths.fieldSteps] as int;
         userSteps[uid] = (userSteps[uid] ?? 0) + steps;
+        
+        final rating = (doc.data()[FirestorePaths.fieldStarRating] as num?)?.toDouble() ?? 0.0;
+        final finalRating = rating > 0.0 ? rating : (steps / 10000).clamp(0.0, 1.0) * 5.0;
+        
+        userRatingSum[uid] = (userRatingSum[uid] ?? 0.0) + finalRating;
+        userRatingCount[uid] = (userRatingCount[uid] ?? 0) + 1;
       }
     }
 
-    // Sort by steps
-    final sortedEntries = userSteps.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+    // Sort
+    List<MapEntry<String, int>> sortedEntries;
+    if (sortByStarRating) {
+      final ratingEntries = userSteps.keys.toList()
+        ..sort((a, b) {
+          final avgA = (userRatingSum[a] ?? 0.0) / (userRatingCount[a] ?? 1);
+          final avgB = (userRatingSum[b] ?? 0.0) / (userRatingCount[b] ?? 1);
+          return avgB.compareTo(avgA);
+        });
+      sortedEntries = ratingEntries.map((uid) => MapEntry(uid, userSteps[uid]!)).toList();
+    } else {
+      sortedEntries = userSteps.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+    }
 
     // Take top N
     final topEntries = sortedEntries.take(limit).toList();
@@ -218,7 +382,16 @@ class LeaderboardRemoteDataSource {
         userData['uid'] = uid;
       }
       
-      leaderboard.add(LeaderboardEntryModel.fromDailySteps(userData, steps, rank));
+      final ratingSum = userRatingSum[uid] ?? 0.0;
+      final ratingCount = userRatingCount[uid] ?? 1;
+      final avgRating = (ratingSum / ratingCount).clamp(0.0, 5.0);
+
+      leaderboard.add(LeaderboardEntryModel.fromDailySteps(
+        userData, 
+        steps, 
+        rank,
+        calculatedStarRating: avgRating,
+      ));
       rank++;
     }
 

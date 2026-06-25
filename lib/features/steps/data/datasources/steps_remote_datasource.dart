@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:step_sync/core/constants/firestore_paths.dart';
 import 'package:step_sync/core/services/rating_service.dart';
+import 'package:step_sync/core/utils/formatters.dart';
 import 'package:step_sync/features/steps/data/models/daily_steps_model.dart';
 
 /// Remote data source for step data using Firestore.
@@ -18,8 +19,14 @@ class StepsRemoteDataSource {
         .doc(docId)
         .set(steps.toFirestore(), SetOptions(merge: true));
 
-    // Also update user's total steps
-    await _updateUserTotalSteps(steps.uid, steps.steps);
+    // Also update user's total steps and calculate new star rating
+    final double newStarRating = await _updateUserTotalSteps(steps.uid, steps.steps);
+    
+    // Update the daily document with the final calculated rating
+    await _firestore
+        .collection(FirestorePaths.dailySteps)
+        .doc(docId)
+        .update({FirestorePaths.fieldStarRating: newStarRating});
   }
 
   /// Get daily steps for a specific date.
@@ -80,8 +87,8 @@ class StepsRemoteDataSource {
     return results.take(days).toList();
   }
 
-  /// Update user's total steps and consistency score in the users collection.
-  Future<void> _updateUserTotalSteps(String uid, int todaySteps) async {
+  /// Update user's total steps and consistency score in the users collection. Returns the new star rating.
+  Future<double> _updateUserTotalSteps(String uid, int todaySteps) async {
     // Fetch the user document to get dailyGoal and createdAt
     final userDoc = await _firestore.collection(FirestorePaths.users).doc(uid).get();
     final dailyGoal = (userDoc.data()?[FirestorePaths.fieldDailyGoal] as int?) ?? 10000;
@@ -149,6 +156,8 @@ class StepsRemoteDataSource {
       FirestorePaths.fieldTotalSteps: totalSteps,
       FirestorePaths.fieldConsistencyScore: consistencyScore,
       FirestorePaths.fieldStarRating: ratingResult.starRating,
+      'weeklyAvgStarRating': ratingResult.weeklyAvgRating,
+      'monthlyAvgStarRating': ratingResult.monthlyAvgRating,
     });
     
     // Handle Referral Bag filling when hitting 10k steps
@@ -160,13 +169,18 @@ class StepsRemoteDataSource {
         await _firestore.runTransaction((transaction) async {
           final referralDoc = await transaction.get(referralDocRef);
           int starsGiven = 0;
+          String lastStarDate = '';
           if (referralDoc.exists) {
             starsGiven = (referralDoc.data()?[FirestorePaths.fieldStarsGivenCount] as int?) ?? 0;
+            lastStarDate = (referralDoc.data()?['lastStarGivenDate'] as String?) ?? '';
           }
           
-          if (starsGiven < 30) {
+          final todayStr = Formatters.formatDateKey(DateTime.now());
+          
+          if (starsGiven < 30 && lastStarDate != todayStr) {
             transaction.set(referralDocRef, {
               FirestorePaths.fieldStarsGivenCount: starsGiven + 1,
+              'lastStarGivenDate': todayStr,
               'lastUpdated': FieldValue.serverTimestamp(),
             }, SetOptions(merge: true));
             
@@ -203,5 +217,7 @@ class StepsRemoteDataSource {
         await batch.commit();
       }
     }
+    
+    return ratingResult.starRating;
   }
 }

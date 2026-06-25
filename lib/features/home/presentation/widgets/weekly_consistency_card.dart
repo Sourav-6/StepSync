@@ -6,6 +6,8 @@ import 'package:step_sync/core/constants/app_dimensions.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 import 'package:step_sync/features/steps/presentation/providers/steps_provider.dart';
 import 'package:step_sync/features/steps/domain/entities/daily_steps_entity.dart';
+import 'package:step_sync/features/auth/domain/entities/user_entity.dart';
+import 'package:step_sync/core/widgets/golden_star_badge.dart';
 
 import 'package:step_sync/core/widgets/clay_card.dart';
 
@@ -46,7 +48,7 @@ class WeeklyConsistencyCard extends ConsumerWidget {
               ),
               const SizedBox(height: 20),
               recentStepsAsync.when(
-                data: (recentSteps) => _buildDayTracker(context, recentSteps, user.dailyGoal),
+                data: (recentSteps) => _buildDayTracker(context, recentSteps, user.dailyGoal, user),
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(child: Text('Error loading steps', style: GoogleFonts.inter(fontSize: 12))),
               ),
@@ -84,15 +86,15 @@ class WeeklyConsistencyCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildDayTracker(BuildContext context, List<DailyStepsEntity> recentSteps, int dailyGoal) {
+  Widget _buildDayTracker(BuildContext context, List<DailyStepsEntity> recentSteps, int dailyGoal, UserEntity user) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     // We want the last 7 days ending with today
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     
-    final Map<String, int> stepsByDate = {
-      for (var step in recentSteps) step.date: step.steps
+    final Map<String, DailyStepsEntity> stepsByDate = {
+      for (var step in recentSteps) step.date: step
     };
     
     final days = <Widget>[];
@@ -102,40 +104,42 @@ class WeeklyConsistencyCard extends ConsumerWidget {
       final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
       final dayLabel = _getDayLabel(date.weekday);
       
-      final steps = stepsByDate[dateStr] ?? 0;
-      final bool metGoal = steps >= dailyGoal;
+      final stepEntity = stepsByDate[dateStr];
+      final steps = stepEntity?.steps ?? 0;
       final bool hasData = steps > 0;
+      
+      // For today, use the live user star rating. For past days, strictly use the saved rating.
+      // We no longer fallback to step-ratio because the user specifically requested the exact daily rating.
+      double displayRating = 0.0;
+      if (dateStr == '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}') {
+         // Today
+         displayRating = user.starRating;
+      } else if (stepEntity != null) {
+         // Past day
+         displayRating = stepEntity.starRating;
+      }
       
       days.add(
         Expanded(
           child: Column(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: metGoal 
-                      ? AppColors.successGreen.withValues(alpha: 0.15)
-                      : (hasData ? AppColors.warningYellow.withValues(alpha: 0.1) : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03))),
-                  border: Border.all(
-                    color: metGoal
-                        ? AppColors.successGreen
-                        : (hasData ? AppColors.warningYellow.withValues(alpha: 0.5) : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1))),
-                    width: metGoal ? 2 : 1,
-                  ),
-                ),
-                child: Center(
-                  child: metGoal 
-                      ? const Icon(Icons.check_rounded, size: 16, color: AppColors.successGreen)
-                      : (hasData 
-                          ? Text(
-                              '${(steps/dailyGoal * 100).toInt()}%',
-                              style: GoogleFonts.inter(fontSize: 8, color: AppColors.warningYellow, fontWeight: FontWeight.w600),
-                            )
-                          : const SizedBox.shrink()),
-                ),
-              ),
+              hasData
+                  ? FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: GoldenStarBadge(
+                        rating: displayRating,
+                        fontSize: 12,
+                        iconSize: 14,
+                      ),
+                    )
+                  : Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                      ),
+                    ),
               const SizedBox(height: 8),
               Text(
                 dayLabel,

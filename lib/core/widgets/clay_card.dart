@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:step_sync/core/constants/app_colors.dart';
 
 /// A premium Claymorphism Card widget with soft 3D bubble-like depth.
 /// Uses dual inner shadows (top-left highlight, bottom-right shadow)
@@ -35,25 +36,22 @@ class ClayCard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     
     // Fallback base color
-    final baseColor = color ?? (isDark ? theme.colorScheme.surface : Colors.white);
+    final baseColor = color ?? (isDark ? AppColors.darkSurface : AppColors.lightSurface);
 
-    // Calculate light and dark inner shadow colors
-    final hsl = HSLColor.fromColor(baseColor);
-    
-    // Light inner shadow (highlight): Lighter than base color
+    // Light inner shadow (highlight)
     final Color lightInnerShadowColor = isDark
-        ? Colors.white.withOpacity(0.08)
-        : Colors.white.withOpacity(0.70);
+        ? AppColors.darkClayHighlight
+        : AppColors.lightClayHighlight;
 
-    // Dark inner shadow: Slightly darker/saturated variant
+    // Dark inner shadow
     final Color darkInnerShadowColor = isDark
-        ? Colors.black.withOpacity(0.4)
-        : hsl.withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0)).toColor().withOpacity(0.25);
+        ? AppColors.darkClayShadow
+        : AppColors.lightClayShadow;
 
     // Outer shadow: Soft blur for floating depth
     final Color outerShadowColor = isDark
-        ? Colors.black.withOpacity(0.35)
-        : Colors.black.withOpacity(0.06);
+        ? Colors.black.withValues(alpha: 0.6)
+        : AppColors.lightClayShadow.withValues(alpha: 0.3);
 
     final Widget cardContent = Container(
       width: width,

@@ -7,6 +7,7 @@ import 'package:step_sync/core/constants/app_colors.dart';
 import 'package:step_sync/core/constants/app_dimensions.dart';
 import 'package:step_sync/core/constants/app_strings.dart';
 import 'package:step_sync/core/utils/formatters.dart';
+import 'package:step_sync/core/widgets/golden_star_badge.dart';
 import 'package:step_sync/core/widgets/loading_shimmer.dart';
 import 'package:step_sync/features/leaderboard/domain/entities/leaderboard_entry.dart';
 import 'package:step_sync/features/leaderboard/presentation/providers/leaderboard_provider.dart';
@@ -285,16 +286,29 @@ class _LeaderboardTile extends ConsumerWidget {
 
           // Name
           Expanded(
-            child: Text(
-              entry.name,
-              style: GoogleFonts.outfit(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: isDark
-                    ? AppColors.textDarkPrimary
-                    : AppColors.textLightPrimary,
-              ),
-              overflow: TextOverflow.ellipsis,
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    entry.name,
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? AppColors.textDarkPrimary
+                          : AppColors.textLightPrimary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (ref.read(leaderboardFilterProvider) != LeaderboardFilter.consistency)
+                  GoldenStarBadge(
+                    rating: entry.starRating,
+                    fontSize: 12,
+                    iconSize: 12,
+                  ),
+              ],
             ),
           ),
 
@@ -303,9 +317,13 @@ class _LeaderboardTile extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               if (ref.read(leaderboardFilterProvider) == LeaderboardFilter.consistency) ...[
-                _buildStars(entry.consistencyScore),
+                GoldenStarBadge(
+                  rating: entry.consistencyScore * 5.0, // Convert 0.0-1.0 to 0.0-5.0 stars
+                  fontSize: 16,
+                  iconSize: 16,
+                ),
                 Text(
-                  '${(entry.consistencyScore * 100).toInt()}%',
+                  'weekly',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
@@ -335,24 +353,7 @@ class _LeaderboardTile extends ConsumerWidget {
     );
   }
 
-  Widget _buildStars(double score) {
-    // 0.0 to 1.0 mapped to 0 to 5 stars
-    final fullStars = (score * 5).floor();
-    final hasHalfStar = (score * 5) - fullStars >= 0.5;
-    
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (index) {
-        if (index < fullStars) {
-          return const Icon(Icons.star, color: Colors.orange, size: 16);
-        } else if (index == fullStars && hasHalfStar) {
-          return const Icon(Icons.star_half, color: Colors.orange, size: 16);
-        } else {
-          return const Icon(Icons.star_border, color: Colors.orange, size: 16);
-        }
-      }),
-    );
-  }
+
 
   Widget _buildRankBadge(int rank) {
     final color = _getRankColor(rank);

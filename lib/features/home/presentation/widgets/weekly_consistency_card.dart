@@ -41,7 +41,7 @@ class WeeklyConsistencyCard extends ConsumerWidget {
                       color: isDark ? AppColors.textDarkPrimary : AppColors.textLightPrimary,
                     ),
                   ),
-                  _buildStarRating(user.consistencyScore),
+                  _buildRatingDisplay(user.starRating, isDark),
                 ],
               ),
               const SizedBox(height: 20),
@@ -59,28 +59,28 @@ class WeeklyConsistencyCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildStarRating(double score) {
-    // Score is 0.0 to 1.0. Multiply by 5 for a 5-star rating.
-    final stars = score * 5;
-    
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (index) {
-        IconData icon;
-        if (stars >= index + 0.75) {
-          icon = Icons.star_rounded;
-        } else if (stars >= index + 0.25) {
-          icon = Icons.star_half_rounded;
-        } else {
-          icon = Icons.star_border_rounded;
-        }
-        
-        return Icon(
-          icon,
-          size: 18,
-          color: AppColors.warningYellow,
-        );
-      }),
+  Widget _buildRatingDisplay(double score, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.warningYellow.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.star_rounded, size: 16, color: AppColors.warningYellow),
+          const SizedBox(width: 4),
+          Text(
+            score.toStringAsFixed(1),
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.warningYellow,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

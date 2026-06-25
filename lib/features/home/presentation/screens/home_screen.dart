@@ -178,6 +178,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       progress: stepData.progress,
                       steps: stepData.steps,
                       goal: stepData.goal,
+                      starRating: user?.starRating,
                     ),
                   )
                       .animate()
@@ -290,24 +291,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   // ─── Daily Achievement Badge ───
                   if (stepData.goalReached)
-                    Container(
+                    ClayCard(
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            AppColors.goldBadge.withValues(alpha: 0.2),
-                            AppColors.accentOrange.withValues(alpha: 0.1),
-                          ],
-                        ),
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.radiusLg),
-                        border: Border.all(
-                          color: AppColors.goldBadge.withValues(alpha: 0.4),
-                        ),
-                      ),
+                      color: AppColors.goldBadge.withValues(alpha: 0.15),
+                      borderRadius: AppDimensions.radiusLg,
                       child: Row(
                         children: [
                           Container(

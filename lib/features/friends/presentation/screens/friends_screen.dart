@@ -266,7 +266,21 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                 ],
               ),
             ),
-            _buildConsistencyBadge(friend.consistencyScore),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.star_rounded, size: 16, color: AppColors.warningYellow),
+                const SizedBox(width: 4),
+                Text(
+                  friend.starRating.toStringAsFixed(1),
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.warningYellow,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -766,19 +780,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     );
   }
 
-  Widget _buildConsistencyBadge(double score) {
-    final stars = (score * 5).round();
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (index) {
-        return Icon(
-          index < stars ? Icons.star_rounded : Icons.star_border_rounded,
-          size: 14,
-          color: AppColors.warningYellow,
-        );
-      }),
-    );
-  }
 
   Widget _buildActionButton(IconData icon, Color color, VoidCallback onTap) {
     return GestureDetector(

@@ -276,6 +276,7 @@ class FriendsRemoteDataSource {
           profileImage: data[FirestorePaths.fieldProfileImage] ?? '',
           totalSteps: data[FirestorePaths.fieldTotalSteps] ?? 0,
           consistencyScore: (data[FirestorePaths.fieldConsistencyScore] as num?)?.toDouble() ?? 0.0,
+          starRating: (data[FirestorePaths.fieldStarRating] as num?)?.toDouble() ?? 0.0,
           currentStreak: data[FirestorePaths.fieldCurrentStreak] ?? 0,
           isFriend: isFriend,
         ));
@@ -285,5 +286,46 @@ class FriendsRemoteDataSource {
     }
 
     return entities;
+  }
+
+  /// Get the list of users who have contributed stars to the current user's referral bag.
+  Future<List<Map<String, dynamic>>> getReferralContributors(String uid) async {
+    final querySnapshot = await _firestore
+        .collection(FirestorePaths.users)
+        .doc(uid)
+        .collection('referral_stars_given')
+        .get();
+
+    if (querySnapshot.docs.isEmpty) return [];
+
+    List<Map<String, dynamic>> contributors = [];
+
+    // Need to fetch user details for each contributor
+    final userIds = querySnapshot.docs.map((d) => d.id).toList();
+
+    for (var i = 0; i < userIds.length; i += 10) {
+      final chunk = userIds.sublist(i, i + 10 > userIds.length ? userIds.length : i + 10);
+      final usersQuery = await _firestore
+          .collection(FirestorePaths.users)
+          .where(FieldPath.documentId, whereIn: chunk)
+          .get();
+
+      for (final userDoc in usersQuery.docs) {
+        final userId = userDoc.id;
+        final referralDoc = querySnapshot.docs.firstWhere((d) => d.id == userId);
+        final starsGiven = (referralDoc.data()[FirestorePaths.fieldStarsGivenCount] as int?) ?? 0;
+        final lastUpdated = (referralDoc.data()['lastUpdated'] as Timestamp?)?.toDate() ?? DateTime.now();
+
+        contributors.add({
+          'uid': userId,
+          'name': userDoc.data()[FirestorePaths.fieldName] ?? 'Unknown User',
+          'profileImage': userDoc.data()[FirestorePaths.fieldProfileImage] ?? '',
+          'starsGiven': starsGiven,
+          'lastUpdated': lastUpdated,
+        });
+      }
+    }
+
+    return contributors;
   }
 }

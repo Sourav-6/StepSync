@@ -82,7 +82,7 @@ class TopPerformingGroupCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '~$avgSteps',
+                    '$avgSteps',
                     style: GoogleFonts.outfit(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,

@@ -1,5 +1,6 @@
 import 'package:step_sync/features/friends/domain/entities/friend_entity.dart';
 import 'package:step_sync/features/friends/domain/entities/friend_request_entity.dart';
+import 'package:step_sync/features/friends/domain/entities/referral_contributor_entity.dart';
 
 /// Abstract repository interface for friends system.
 abstract class FriendsRepository {
@@ -35,4 +36,7 @@ abstract class FriendsRepository {
 
   /// Apply a referral code.
   Future<bool> applyReferralCode(String uid, String code);
+
+  /// Get the list of users who have contributed stars to the current user's referral bag.
+  Future<List<ReferralContributorEntity>> getReferralContributors(String uid);
 }

@@ -3,6 +3,7 @@ import 'package:step_sync/features/auth/presentation/providers/auth_provider.dar
 import 'package:step_sync/features/friends/data/repositories/friends_repository_impl.dart';
 import 'package:step_sync/features/friends/domain/entities/friend_entity.dart';
 import 'package:step_sync/features/friends/domain/entities/friend_request_entity.dart';
+import 'package:step_sync/features/friends/domain/entities/referral_contributor_entity.dart';
 import 'package:step_sync/features/friends/domain/repositories/friends_repository.dart';
 
 /// Provider for friends repository.
@@ -65,6 +66,14 @@ final referralCodeProvider = FutureProvider<String>((ref) async {
   // Otherwise generate one
   final repo = ref.watch(friendsRepositoryProvider);
   return await repo.generateReferralCode(user.uid);
+});
+
+/// Provider for the users who contributed to the referral bag.
+final referralBagContributorsProvider = FutureProvider<List<ReferralContributorEntity>>((ref) async {
+  final user = ref.watch(currentUserProvider).value;
+  if (user == null) return [];
+  final repo = ref.watch(friendsRepositoryProvider);
+  return await repo.getReferralContributors(user.uid);
 });
 
 /// State notifier for friend actions (send/accept/reject/remove).

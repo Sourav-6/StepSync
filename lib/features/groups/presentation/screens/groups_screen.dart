@@ -6,6 +6,7 @@ import 'package:step_sync/features/groups/presentation/providers/groups_provider
 import 'package:step_sync/features/groups/domain/entities/group_entity.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 import 'package:step_sync/features/groups/presentation/screens/group_details_screen.dart';
+import 'package:step_sync/core/widgets/golden_star_badge.dart';
 
 class GroupsScreen extends ConsumerStatefulWidget {
   const GroupsScreen({super.key});
@@ -175,7 +176,16 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> with SingleTickerPr
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ListTile(
             title: Text(group.name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-            subtitle: Text('${group.memberUids.length} members • ${group.isPublic ? 'Public' : 'Private'}'),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Row(
+                children: [
+                  Text('${group.memberUids.length} members • ${group.isPublic ? 'Public' : 'Private'}'),
+                  const SizedBox(width: 8),
+                  GoldenStarBadge(rating: group.starRating, fontSize: 12, iconSize: 12),
+                ],
+              ),
+            ),
             trailing: trailingWidget,
             onTap: isMyGroups
                 ? () {

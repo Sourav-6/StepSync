@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:step_sync/core/constants/app_colors.dart';
 import 'package:step_sync/core/constants/app_dimensions.dart';
+import 'package:step_sync/core/widgets/golden_star_badge.dart';
 
 /// Animated circular progress ring for displaying step goal progress.
 class StepProgressRing extends StatefulWidget {
@@ -11,6 +12,7 @@ class StepProgressRing extends StatefulWidget {
   final int goal;
   final double size;
   final double strokeWidth;
+  final double? starRating;
 
   const StepProgressRing({
     super.key,
@@ -19,6 +21,7 @@ class StepProgressRing extends StatefulWidget {
     required this.goal,
     this.size = AppDimensions.progressRingSize,
     this.strokeWidth = AppDimensions.progressRingStroke,
+    this.starRating,
   });
 
   @override
@@ -130,26 +133,14 @@ class _StepProgressRingState extends State<StepProgressRing>
                           : AppColors.textLightSecondary,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  // Percentage
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
+                  if (widget.starRating != null) ...[
+                    const SizedBox(height: 8),
+                    GoldenStarBadge(
+                      rating: widget.starRating!,
+                      fontSize: 14,
+                      iconSize: 14,
                     ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryBlue.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      '${(_progressAnimation.value * 100).round()}%',
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primaryBlue,
-                      ),
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ],

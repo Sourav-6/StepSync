@@ -8,6 +8,7 @@ class FriendEntity {
   final String profileImage;
   final int totalSteps;
   final double consistencyScore;
+  final double starRating;
   final int currentStreak;
   final bool isFriend;
   final bool requestPending;
@@ -19,6 +20,7 @@ class FriendEntity {
     this.profileImage = '',
     this.totalSteps = 0,
     this.consistencyScore = 0.0,
+    this.starRating = 0.0,
     this.currentStreak = 0,
     this.isFriend = false,
     this.requestPending = false,

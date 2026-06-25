@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:step_sync/core/constants/app_colors.dart';
 import 'package:step_sync/core/constants/app_dimensions.dart';
+import 'package:step_sync/core/widgets/golden_star_badge.dart';
 import 'package:step_sync/features/groups/domain/entities/group_entity.dart';
 import 'package:step_sync/features/groups/presentation/providers/groups_provider.dart';
 import 'package:step_sync/features/groups/presentation/providers/group_members_steps_provider.dart';
@@ -447,8 +448,15 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen> {
                           child: memberData.profileImage.isEmpty ? Text(memberData.name[0].toUpperCase()) : null,
                         ),
                         title: Text(isCurrentUser ? '${memberData.name} (You)' : memberData.name),
-                        subtitle: Text(
-                          '${isMemberAdmin ? 'Admin' : 'Member'} • ${Formatters.formatNumber(memberData.todaySteps)} / ${Formatters.formatNumber(memberData.dailyGoal)} steps today'
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Row(
+                            children: [
+                              Text('${isMemberAdmin ? 'Admin' : 'Member'} • ${Formatters.formatNumber(memberData.todaySteps)} / ${Formatters.formatNumber(memberData.dailyGoal)} steps'),
+                              const SizedBox(width: 8),
+                              GoldenStarBadge(rating: memberData.starRating, fontSize: 12, iconSize: 12),
+                            ],
+                          ),
                         ),
                         trailing: (isAdmin && !isCurrentUser)
                             ? IconButton(

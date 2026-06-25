@@ -17,16 +17,29 @@ class LeaderboardRemoteDataSource {
   }) {
     return _firestore
         .collection(FirestorePaths.users)
-        .orderBy(FirestorePaths.fieldConsistencyScore, descending: true)
-        .limit(limit)
         .snapshots()
         .map((snapshot) {
-      int rank = 1;
-      return snapshot.docs.map((doc) {
-        final entry = LeaderboardEntryModel.fromFirestore(doc, rank);
-        rank++;
-        return entry;
+      final entries = snapshot.docs.map((doc) {
+        return LeaderboardEntryModel.fromFirestore(doc, 0); // Temporary rank
       }).toList();
+
+      // Sort client-side by starRating descending
+      entries.sort((a, b) => b.starRating.compareTo(a.starRating));
+
+      // Assign correct ranks and limit
+      final topEntries = entries.take(limit).toList();
+      for (int i = 0; i < topEntries.length; i++) {
+        topEntries[i] = LeaderboardEntryModel(
+          uid: topEntries[i].uid,
+          name: topEntries[i].name,
+          profileImage: topEntries[i].profileImage,
+          steps: topEntries[i].steps,
+          rank: i + 1,
+          consistencyScore: topEntries[i].consistencyScore,
+          starRating: topEntries[i].starRating,
+        );
+      }
+      return topEntries;
     });
   }
 

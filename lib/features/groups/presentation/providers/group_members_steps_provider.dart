@@ -9,6 +9,7 @@ class GroupMemberStepData {
   final String profileImage;
   final int todaySteps;
   final int dailyGoal;
+  final double starRating;
 
   GroupMemberStepData({
     required this.uid,
@@ -16,6 +17,7 @@ class GroupMemberStepData {
     this.profileImage = '',
     this.todaySteps = 0,
     this.dailyGoal = 10000,
+    this.starRating = 0.0,
   });
 }
 
@@ -37,6 +39,7 @@ final groupMembersStepsProvider = FutureProvider.family<List<GroupMemberStepData
       final name = userData[FirestorePaths.fieldName] as String? ?? 'User';
       final profileImage = userData[FirestorePaths.fieldProfileImage] as String? ?? '';
       final dailyGoal = userData[FirestorePaths.fieldDailyGoal] as int? ?? 10000;
+      final starRating = (userData[FirestorePaths.fieldStarRating] as num?)?.toDouble() ?? 0.0;
 
       // 2. Fetch today's steps for this user
       final dailyStepDocId = FirestorePaths.dailyStepDocId(uid, today);
@@ -53,6 +56,7 @@ final groupMembersStepsProvider = FutureProvider.family<List<GroupMemberStepData
         profileImage: profileImage,
         todaySteps: todaySteps,
         dailyGoal: dailyGoal,
+        starRating: starRating,
       ));
     } catch (e) {
       // Ignore errors for individual users so the rest of the list loads

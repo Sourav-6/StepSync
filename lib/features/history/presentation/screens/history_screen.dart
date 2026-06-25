@@ -157,10 +157,6 @@ class _DailyView extends ConsumerWidget {
             Formatters.formatCalories(stepData.calories),
             Icons.local_fire_department_rounded, AppColors.accentOrange,
           ),
-          _buildStatRow(
-            context, 'Goal Progress', '${stepData.progressPercent}%',
-            Icons.flag_rounded, AppColors.successGreen,
-          ),
         ].animate(interval: 100.ms).fadeIn().slideX(begin: 0.05),
       ),
     );

@@ -6,6 +6,7 @@ import 'package:step_sync/core/constants/app_colors.dart';
 import 'package:step_sync/core/constants/app_dimensions.dart';
 import 'package:step_sync/core/constants/app_strings.dart';
 import 'package:step_sync/core/utils/formatters.dart';
+import 'package:step_sync/core/widgets/golden_star_badge.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 import 'package:step_sync/features/friends/domain/entities/friend_entity.dart';
 import 'package:step_sync/features/friends/presentation/providers/friends_provider.dart';
@@ -213,7 +214,7 @@ class FriendsLeaderboardScreen extends ConsumerWidget {
                 Text(emoji, style: TextStyle(fontSize: rank == 1 ? 28 : 22)),
                 const SizedBox(height: 2),
                 Text(
-                  '${(friend.consistencyScore * 100).toInt()}%',
+                  '${friend.starRating.toStringAsFixed(1)}★',
                   style: GoogleFonts.outfit(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -334,14 +335,26 @@ class FriendsLeaderboardScreen extends ConsumerWidget {
 
           // Name
           Expanded(
-            child: Text(
-              isCurrentUser ? '${friend.name} (You)' : friend.name,
-              style: GoogleFonts.outfit(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: isDark ? AppColors.textDarkPrimary : AppColors.textLightPrimary,
-              ),
-              overflow: TextOverflow.ellipsis,
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    isCurrentUser ? '${friend.name} (You)' : friend.name,
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? AppColors.textDarkPrimary : AppColors.textLightPrimary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GoldenStarBadge(
+                  rating: friend.starRating,
+                  fontSize: 12,
+                  iconSize: 12,
+                ),
+              ],
             ),
           ),
 
@@ -349,13 +362,10 @@ class FriendsLeaderboardScreen extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              _buildStars(friend.consistencyScore),
-              Text(
-                '${(friend.consistencyScore * 100).toInt()}%',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
-                ),
+              GoldenStarBadge(
+                rating: friend.starRating,
+                fontSize: 16,
+                iconSize: 16,
               ),
             ],
           ),
@@ -364,23 +374,6 @@ class FriendsLeaderboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStars(double score) {
-    final fullStars = (score * 5).floor();
-    final hasHalfStar = (score * 5) - fullStars >= 0.5;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (index) {
-        if (index < fullStars) {
-          return const Icon(Icons.star, color: Colors.orange, size: 16);
-        } else if (index == fullStars && hasHalfStar) {
-          return const Icon(Icons.star_half, color: Colors.orange, size: 16);
-        } else {
-          return const Icon(Icons.star_border, color: Colors.orange, size: 16);
-        }
-      }),
-    );
-  }
 
   Color _getRankColor(int rank) {
     switch (rank) {

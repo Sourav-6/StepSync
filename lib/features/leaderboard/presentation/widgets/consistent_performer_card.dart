@@ -100,21 +100,21 @@ class ConsistentPerformerCard extends ConsumerWidget {
                 ),
               ),
 
-              // Consistency stars
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  _buildStars(performer.consistencyScore),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${(performer.consistencyScore * 100).toInt()}% consistent',
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.star_rounded, size: 16, color: AppColors.warningYellow),
+                      const SizedBox(width: 4),
+                      Text(
+                        performer.starRating.toStringAsFixed(1),
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.warningYellow,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
             ],
           ),
         )
@@ -128,24 +128,6 @@ class ConsistentPerformerCard extends ConsumerWidget {
               color: AppColors.secondaryTeal.withValues(alpha: 0.15),
             );
       },
-    );
-  }
-
-  Widget _buildStars(double score) {
-    final fullStars = (score * 5).floor();
-    final hasHalfStar = (score * 5) - fullStars >= 0.5;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (index) {
-        if (index < fullStars) {
-          return const Icon(Icons.star, color: Colors.orange, size: 14);
-        } else if (index == fullStars && hasHalfStar) {
-          return const Icon(Icons.star_half, color: Colors.orange, size: 14);
-        } else {
-          return const Icon(Icons.star_border, color: Colors.orange, size: 14);
-        }
-      }),
     );
   }
 }

@@ -24,6 +24,8 @@ class UserEntity {
   final List<String> friendRequestsReceived;
   final String referralCode;
   final String? referredBy;
+  final double starRating;
+  final int referralBagStars;
 
   const UserEntity({
     required this.uid,
@@ -46,6 +48,8 @@ class UserEntity {
     this.friendRequestsReceived = const [],
     this.referralCode = '',
     this.referredBy,
+    this.starRating = 0.0,
+    this.referralBagStars = 0,
   });
 
   /// Create a copy with updated fields.
@@ -70,6 +74,8 @@ class UserEntity {
     List<String>? friendRequestsReceived,
     String? referralCode,
     String? referredBy,
+    double? starRating,
+    int? referralBagStars,
   }) {
     return UserEntity(
       uid: uid ?? this.uid,
@@ -92,6 +98,8 @@ class UserEntity {
       friendRequestsReceived: friendRequestsReceived ?? this.friendRequestsReceived,
       referralCode: referralCode ?? this.referralCode,
       referredBy: referredBy ?? this.referredBy,
+      starRating: starRating ?? this.starRating,
+      referralBagStars: referralBagStars ?? this.referralBagStars,
     );
   }
 

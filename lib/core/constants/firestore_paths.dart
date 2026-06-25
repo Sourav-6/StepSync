@@ -31,6 +31,8 @@ class FirestorePaths {
   static const String fieldFriendRequestsReceived = 'friendRequestsReceived';
   static const String fieldReferralCode = 'referralCode';
   static const String fieldReferredBy = 'referredBy';
+  static const String fieldStarRating = 'starRating';
+  static const String fieldReferralBagStars = 'referralBagStars';
 
   // ─── Daily Steps Fields ───
   static const String fieldUid = 'uid';
@@ -62,4 +64,11 @@ class FirestorePaths {
 
   /// Get the path for user achievements sub-collection.
   static String userAchievements(String uid) => '$users/$uid/$achievements';
+
+  /// Subcollection tracking how many referral stars have been given per referred user.
+  /// Path: users/{referrerUid}/referral_stars_given/{referredUid}
+  static const String referralStarsGiven = 'referral_stars_given';
+  static const String fieldStarsGivenCount = 'count';
+  static String referralStarsGivenDoc(String referrerUid, String referredUid) =>
+      '$users/$referrerUid/$referralStarsGiven/$referredUid';
 }

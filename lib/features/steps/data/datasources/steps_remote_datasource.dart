@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:step_sync/core/constants/firestore_paths.dart';
+import 'package:step_sync/core/services/rating_service.dart';
 import 'package:step_sync/features/steps/data/models/daily_steps_model.dart';
 
 /// Remote data source for step data using Firestore.
@@ -132,24 +133,72 @@ class StepsRemoteDataSource {
 
     final prevTotalSteps = (userDoc.data()?[FirestorePaths.fieldTotalSteps] as int?) ?? 0;
     final diff = totalSteps - prevTotalSteps;
+    
+    // ─── 5-Star Rating & Referral Bag Logic ───
+    final ratingService = RatingService(firestore: _firestore);
+    final currentReferralBagStars = (userDoc.data()?[FirestorePaths.fieldReferralBagStars] as int?) ?? 0;
+    
+    final ratingResult = await ratingService.calculateRating(
+      uid: uid, 
+      todaySteps: todaySteps, 
+      dailyGoal: dailyGoal, 
+      currentReferralBagStars: currentReferralBagStars,
+    );
 
     await _firestore.collection(FirestorePaths.users).doc(uid).update({
       FirestorePaths.fieldTotalSteps: totalSteps,
       FirestorePaths.fieldConsistencyScore: consistencyScore,
+      FirestorePaths.fieldStarRating: ratingResult.starRating,
     });
+    
+    // Handle Referral Bag filling when hitting 10k steps
+    if (todaySteps >= 10000) {
+      final referredBy = userDoc.data()?[FirestorePaths.fieldReferredBy] as String?;
+      if (referredBy != null && referredBy.isNotEmpty) {
+        final referralDocRef = _firestore.doc(FirestorePaths.referralStarsGivenDoc(referredBy, uid));
+        
+        await _firestore.runTransaction((transaction) async {
+          final referralDoc = await transaction.get(referralDocRef);
+          int starsGiven = 0;
+          if (referralDoc.exists) {
+            starsGiven = (referralDoc.data()?[FirestorePaths.fieldStarsGivenCount] as int?) ?? 0;
+          }
+          
+          if (starsGiven < 30) {
+            transaction.set(referralDocRef, {
+              FirestorePaths.fieldStarsGivenCount: starsGiven + 1,
+              'lastUpdated': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
+            
+            final referrerDocRef = _firestore.collection(FirestorePaths.users).doc(referredBy);
+            transaction.update(referrerDocRef, {
+              FirestorePaths.fieldReferralBagStars: FieldValue.increment(1),
+            });
+          }
+        });
+      }
+    }
 
-    if (diff != 0) {
+    // 5. Update user's groups total steps and star rating
+    if (diff != 0 || true) { // we run this always to update star rating
       final groupsQuery = await _firestore
           .collection(FirestorePaths.groups)
           .where('memberUids', arrayContains: uid)
           .get();
-      
+
       if (groupsQuery.docs.isNotEmpty) {
         final batch = _firestore.batch();
         for (final groupDoc in groupsQuery.docs) {
-          batch.update(groupDoc.reference, {
-            'totalSteps': FieldValue.increment(diff),
-          });
+          final groupUpdate = <String, dynamic>{};
+          if (diff != 0) {
+            groupUpdate['totalSteps'] = FieldValue.increment(diff);
+          }
+          if (ratingResult.groupRatings.containsKey(groupDoc.id)) {
+            groupUpdate['starRating'] = ratingResult.groupRatings[groupDoc.id];
+          }
+          if (groupUpdate.isNotEmpty) {
+            batch.update(groupDoc.reference, groupUpdate);
+          }
         }
         await batch.commit();
       }

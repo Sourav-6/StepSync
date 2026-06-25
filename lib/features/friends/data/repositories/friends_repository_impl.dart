@@ -1,6 +1,7 @@
 import 'package:step_sync/features/friends/data/datasources/friends_remote_datasource.dart';
 import 'package:step_sync/features/friends/domain/entities/friend_entity.dart';
 import 'package:step_sync/features/friends/domain/entities/friend_request_entity.dart';
+import 'package:step_sync/features/friends/domain/entities/referral_contributor_entity.dart';
 import 'package:step_sync/features/friends/domain/repositories/friends_repository.dart';
 
 /// Implementation of [FriendsRepository] that delegates to [FriendsRemoteDataSource].
@@ -63,5 +64,17 @@ class FriendsRepositoryImpl implements FriendsRepository {
   @override
   Future<bool> applyReferralCode(String uid, String code) async {
     return await _remoteDataSource.applyReferralCode(uid, code);
+  }
+
+  @override
+  Future<List<ReferralContributorEntity>> getReferralContributors(String uid) async {
+    final contributorsData = await _remoteDataSource.getReferralContributors(uid);
+    return contributorsData.map((data) => ReferralContributorEntity(
+      uid: data['uid'] as String,
+      name: data['name'] as String,
+      profileImage: data['profileImage'] as String,
+      starsGiven: data['starsGiven'] as int,
+      lastUpdated: data['lastUpdated'] as DateTime,
+    )).toList();
   }
 }

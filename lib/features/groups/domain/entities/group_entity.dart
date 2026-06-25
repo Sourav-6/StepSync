@@ -11,6 +11,7 @@ class GroupEntity {
   final List<String> invitedUids;
   final List<String> pendingRequestUids; // Users who requested to join (private groups)
   final int totalSteps;
+  final double starRating;
   final DateTime createdAt;
 
   const GroupEntity({
@@ -23,6 +24,7 @@ class GroupEntity {
     this.invitedUids = const [],
     this.pendingRequestUids = const [],
     this.totalSteps = 0,
+    this.starRating = 0.0,
     required this.createdAt,
   });
 
@@ -36,6 +38,7 @@ class GroupEntity {
     List<String>? invitedUids,
     List<String>? pendingRequestUids,
     int? totalSteps,
+    double? starRating,
     DateTime? createdAt,
   }) {
     return GroupEntity(
@@ -48,6 +51,7 @@ class GroupEntity {
       invitedUids: invitedUids ?? this.invitedUids,
       pendingRequestUids: pendingRequestUids ?? this.pendingRequestUids,
       totalSteps: totalSteps ?? this.totalSteps,
+      starRating: starRating ?? this.starRating,
       createdAt: createdAt ?? this.createdAt,
     );
   }

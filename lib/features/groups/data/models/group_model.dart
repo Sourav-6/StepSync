@@ -12,6 +12,7 @@ class GroupModel extends GroupEntity {
     super.invitedUids = const [],
     super.pendingRequestUids = const [],
     super.totalSteps = 0,
+    super.starRating = 0.0,
     required super.createdAt,
   });
 
@@ -27,6 +28,7 @@ class GroupModel extends GroupEntity {
       invitedUids: List<String>.from(data['invitedUids'] ?? []),
       pendingRequestUids: List<String>.from(data['pendingRequestUids'] ?? []),
       totalSteps: data['totalSteps'] as int? ?? 0,
+      starRating: (data['starRating'] as num?)?.toDouble() ?? 0.0,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -41,6 +43,7 @@ class GroupModel extends GroupEntity {
       'invitedUids': invitedUids,
       'pendingRequestUids': pendingRequestUids,
       'totalSteps': totalSteps,
+      'starRating': starRating,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
@@ -56,6 +59,7 @@ class GroupModel extends GroupEntity {
       invitedUids: entity.invitedUids,
       pendingRequestUids: entity.pendingRequestUids,
       totalSteps: entity.totalSteps,
+      starRating: entity.starRating,
       createdAt: entity.createdAt,
     );
   }

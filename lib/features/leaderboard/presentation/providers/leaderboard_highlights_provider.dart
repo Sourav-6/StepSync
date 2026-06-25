@@ -31,7 +31,7 @@ final userRankChangeProvider = FutureProvider<int>((ref) async {
     // Get today's rank (how many users have better consistency)
     final todayQuery = await firestore
         .collection(FirestorePaths.users)
-        .where(FirestorePaths.fieldConsistencyScore, isGreaterThan: user.consistencyScore)
+        .where(FirestorePaths.fieldStarRating, isGreaterThan: user.starRating)
         .count()
         .get();
 

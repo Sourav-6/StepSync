@@ -6,6 +6,7 @@ import 'package:step_sync/core/services/firebase_service.dart';
 import 'package:step_sync/core/services/hive_service.dart';
 import 'package:step_sync/core/services/background_sync_service.dart';
 import 'package:step_sync/core/services/notification_service.dart';
+import 'package:step_sync/core/utils/migration_utils.dart';
 
 /// Application entry point.
 /// Initializes Firebase, Hive, and system UI before launching the app.
@@ -34,6 +35,9 @@ void main() async {
   await FirebaseService.initialize();
   await BackgroundSyncService.initialize();
   await NotificationService.initialize();
+
+  // Run migration (temporarily)
+  MigrationUtils.applyLoginBonusToAllUsers();
 
   // Run the app with Riverpod
   runApp(

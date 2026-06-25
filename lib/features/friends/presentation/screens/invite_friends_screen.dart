@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:step_sync/core/constants/app_colors.dart';
 import 'package:step_sync/core/constants/app_dimensions.dart';
 import 'package:step_sync/core/constants/app_strings.dart';
+import 'package:step_sync/core/widgets/golden_star_badge.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 import 'package:step_sync/features/friends/presentation/providers/friends_provider.dart';
 
@@ -311,10 +312,192 @@ class _InviteFriendsScreenState extends ConsumerState<InviteFriendsScreen> {
               ),
             ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.05),
 
+            const SizedBox(height: 32),
+            _buildReferralBagSection(context, ref, isDark),
             const SizedBox(height: 24),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildReferralBagSection(BuildContext context, WidgetRef ref, bool isDark) {
+    final contributorsAsync = ref.watch(referralBagContributorsProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Referral Bag',
+          style: GoogleFonts.outfit(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: isDark ? AppColors.textDarkPrimary : AppColors.textLightPrimary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Stars earned from referred friends (Max 30 per friend)',
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        contributorsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => Text(
+            'Failed to load referral bag',
+            style: GoogleFonts.inter(color: AppColors.errorRed),
+          ),
+          data: (contributors) {
+            if (contributors.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                  border: Border.all(
+                    color: isDark
+                        ? AppColors.darkBorder.withValues(alpha: 0.2)
+                        : AppColors.lightBorder.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.card_giftcard_rounded,
+                        size: 48,
+                        color: (isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary).withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Your referral bag is empty',
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Invite friends to start earning stars!',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: (isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary).withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                border: Border.all(
+                  color: isDark
+                      ? AppColors.darkBorder.withValues(alpha: 0.2)
+                      : AppColors.lightBorder.withValues(alpha: 0.5),
+                ),
+              ),
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(0),
+                itemCount: contributors.length,
+                separatorBuilder: (context, index) => Divider(
+                  height: 1,
+                  color: isDark ? AppColors.darkBorder.withValues(alpha: 0.2) : AppColors.lightBorder.withValues(alpha: 0.5),
+                ),
+                itemBuilder: (context, index) {
+                  final contributor = contributors[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            gradient: AppColors.primaryGradient,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: contributor.profileImage.isNotEmpty
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    contributor.profileImage,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Center(
+                                      child: Text(
+                                        contributor.name.isNotEmpty ? contributor.name[0].toUpperCase() : 'U',
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : Center(
+                                  child: Text(
+                                    contributor.name.isNotEmpty ? contributor.name[0].toUpperCase() : 'U',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                contributor.name,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? AppColors.textDarkPrimary : AppColors.textLightPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            GoldenStarBadge(
+                              rating: contributor.starsGiven.toDouble(),
+                              fontSize: 14,
+                              iconSize: 14,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${contributor.starsGiven} / 30',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 

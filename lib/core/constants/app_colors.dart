@@ -35,29 +35,37 @@ class AppColors {
   static const Color errorDark = Color(0xFFA50E0E);
   static const Color errorLight = Color(0xFFF28B82);
 
-  // ─── Dark Theme Backgrounds ───
-  static const Color darkBg = Color(0xFF16181E);      // Softer dark background
-  static const Color darkSurface = Color(0xFF222631); // Soft dark slate surface
-  static const Color darkCard = Color(0xFF2C3242);    // Softer dark slate card
-  static const Color darkBorder = Color(0xFF373E52);
+  // ─── Dark Theme Backgrounds (Earthy/Matte Charcoal - Not typical neon/slate) ───
+  static const Color darkBg = Color(0xFF1E1D1B);      // Deep matte espresso/charcoal
+  static const Color darkSurface = Color(0xFF252422); // Slightly lighter for surfaces
+  static const Color darkCard = Color(0xFF252422);    // Same as surface for clay effect
+  static const Color darkBorder = Color(0xFF33312E);
+  
+  // Dark Claymorphism Shadows
+  static const Color darkClayHighlight = Color(0xFF2F2D2A); // Top-left light
+  static const Color darkClayShadow = Color(0xFF131211);    // Bottom-right shadow
 
-  // ─── Light Theme Backgrounds ───
-  static const Color lightBg = Color(0xFFEDF2FA);      // Softer, premium pastel blue-grey background
-  static const Color lightSurface = Color(0xFFF6F8FD); // Pastel blue-grey surface
-  static const Color lightCard = Color(0xFFFFFFFF);    // Clean white card that pops on pastel background
-  static const Color lightBorder = Color(0xFFD3DFEF);
+  // ─── Light Theme Backgrounds (Soft Clay) ───
+  static const Color lightBg = Color(0xFFE0E5EC);      // Soft clay bluish-grey
+  static const Color lightSurface = Color(0xFFE0E5EC); // Same for smooth 3D effect
+  static const Color lightCard = Color(0xFFE0E5EC);    
+  static const Color lightBorder = Color(0xFFD1D9E6);
+
+  // Light Claymorphism Shadows
+  static const Color lightClayHighlight = Color(0xFFFFFFFF); // Top-left light
+  static const Color lightClayShadow = Color(0xFFA3B1C6);    // Bottom-right shadow
 
   // ─── Text Colors ───
-  static const Color textDarkPrimary = Color(0xFFE8EAED);
-  static const Color textDarkSecondary = Color(0xFF9AA0A6);
-  static const Color textLightPrimary = Color(0xFF202124);
-  static const Color textLightSecondary = Color(0xFF5E6368);
+  static const Color textDarkPrimary = Color(0xFFE8E6E3); // Warm off-white
+  static const Color textDarkSecondary = Color(0xFF9E9B96);
+  static const Color textLightPrimary = Color(0xFF4A4E69); // Deep clay text
+  static const Color textLightSecondary = Color(0xFF72778F);
 
   // ─── Glassmorphism ───
   static const Color glassWhite = Color(0x33FFFFFF);
   static const Color glassBorder = Color(0x55FFFFFF);
-  static const Color glassDark = Color(0x33202124);
-  static const Color glassDarkBorder = Color(0x555F6368);
+  static const Color glassDark = Color(0x33252422);
+  static const Color glassDarkBorder = Color(0x5533312E);
 
   // ─── Gradient Presets ───
   static const LinearGradient primaryGradient = LinearGradient(
@@ -88,6 +96,12 @@ class AppColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [Color(0xFF303134), Color(0xFF202124)],
+  );
+
+  static const LinearGradient goldenStarGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFFFDF00), Color(0xFFD4AF37)], // Vibrant Gold to Metallic Gold
   );
 
   // ─── Badge Colors ───

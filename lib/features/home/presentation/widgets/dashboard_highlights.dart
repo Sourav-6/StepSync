@@ -47,7 +47,7 @@ class DashboardHighlights extends ConsumerWidget {
                 data: (winner) => _HighlightCard(
                   title: 'Most Consistent',
                   name: winner?.name ?? 'No data',
-                  value: winner != null ? '${(winner.consistencyScore * 100).toInt()}% rating' : '-',
+                  value: winner != null ? '${winner.starRating.toStringAsFixed(1)}★ rating' : '-',
                   icon: Icons.star_rounded,
                   color: AppColors.primaryBlue,
                 ),

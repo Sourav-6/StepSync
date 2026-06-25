@@ -50,7 +50,7 @@ final currentUserGlobalRankProvider = FutureProvider<int>((ref) async {
     final firestore = FirebaseFirestore.instance;
       final query = await firestore
           .collection('users')
-          .where('consistencyScore', isGreaterThan: user.consistencyScore)
+          .where('starRating', isGreaterThan: user.starRating)
           .count()
           .get();
         

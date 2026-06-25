@@ -26,6 +26,8 @@ class UserModel extends UserEntity {
     super.friendRequestsReceived,
     super.referralCode,
     super.referredBy,
+    super.starRating,
+    super.referralBagStars,
   });
 
   /// Create from Firestore document snapshot.
@@ -54,6 +56,8 @@ class UserModel extends UserEntity {
       friendRequestsReceived: List<String>.from(data[FirestorePaths.fieldFriendRequestsReceived] ?? []),
       referralCode: data[FirestorePaths.fieldReferralCode] ?? '',
       referredBy: data[FirestorePaths.fieldReferredBy],
+      starRating: (data[FirestorePaths.fieldStarRating] as num?)?.toDouble() ?? 0.0,
+      referralBagStars: (data[FirestorePaths.fieldReferralBagStars] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -80,6 +84,8 @@ class UserModel extends UserEntity {
       friendRequestsReceived: List<String>.from(map[FirestorePaths.fieldFriendRequestsReceived] ?? []),
       referralCode: map[FirestorePaths.fieldReferralCode] ?? '',
       referredBy: map[FirestorePaths.fieldReferredBy],
+      starRating: (map[FirestorePaths.fieldStarRating] as num?)?.toDouble() ?? 0.0,
+      referralBagStars: (map[FirestorePaths.fieldReferralBagStars] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -105,6 +111,8 @@ class UserModel extends UserEntity {
       FirestorePaths.fieldFriendRequestsReceived: friendRequestsReceived,
       FirestorePaths.fieldReferralCode: referralCode,
       FirestorePaths.fieldReferredBy: referredBy,
+      FirestorePaths.fieldStarRating: starRating,
+      FirestorePaths.fieldReferralBagStars: referralBagStars,
     };
   }
 
@@ -131,6 +139,8 @@ class UserModel extends UserEntity {
       FirestorePaths.fieldFriendRequestsReceived: friendRequestsReceived,
       FirestorePaths.fieldReferralCode: referralCode,
       FirestorePaths.fieldReferredBy: referredBy,
+      FirestorePaths.fieldStarRating: starRating,
+      FirestorePaths.fieldReferralBagStars: referralBagStars,
     };
   }
 
@@ -157,6 +167,8 @@ class UserModel extends UserEntity {
       friendRequestsReceived: entity.friendRequestsReceived,
       referralCode: entity.referralCode,
       referredBy: entity.referredBy,
+      starRating: entity.starRating,
+      referralBagStars: entity.referralBagStars,
     );
   }
 
@@ -192,6 +204,8 @@ class UserModel extends UserEntity {
       currentRank: 0,
       dailyGoal: 10000,
       consistencyScore: 0.0,
+      starRating: 0.0,
+      referralBagStars: 0,
       referralCode: generatedReferralCode,
       referredBy: referredBy,
     );

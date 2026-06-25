@@ -9,6 +9,7 @@ class LeaderboardEntry {
   final int steps;
   final int rank;
   final double consistencyScore;
+  final double starRating;
 
   const LeaderboardEntry({
     required this.uid,
@@ -17,5 +18,6 @@ class LeaderboardEntry {
     required this.steps,
     required this.rank,
     this.consistencyScore = 0.0,
+    this.starRating = 0.0,
   });
 }

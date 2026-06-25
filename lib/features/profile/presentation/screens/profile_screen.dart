@@ -7,6 +7,7 @@ import 'package:step_sync/core/constants/app_colors.dart';
 import 'package:step_sync/core/constants/app_dimensions.dart';
 import 'package:step_sync/core/constants/app_strings.dart';
 import 'package:step_sync/core/utils/formatters.dart';
+import 'package:step_sync/core/widgets/golden_star_badge.dart';
 import 'package:step_sync/features/achievements/presentation/providers/badges_provider.dart';
 import 'package:step_sync/features/achievements/presentation/widgets/achievements_grid.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
@@ -153,24 +154,33 @@ class ProfileScreen extends ConsumerWidget {
 
                     const SizedBox(height: 12),
 
-                    // Rank badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'Rank ${globalRankAsync.valueOrNull != null ? Formatters.formatRank(globalRankAsync.value!) : "..."}',
-                        style: GoogleFonts.outfit(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                    // Rank and Star Rating badges
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ClayCard(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          color: AppColors.primaryBlue.withValues(alpha: 0.8),
+                          borderRadius: 20,
+                          child: Text(
+                            'Rank ${globalRankAsync.valueOrNull != null ? Formatters.formatRank(globalRankAsync.value!) : "..."}',
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        GoldenStarBadge(
+                          rating: user.starRating,
+                          fontSize: 14,
+                          iconSize: 14,
+                        ),
+                      ],
                     ),
 
                     const SizedBox(height: 12),

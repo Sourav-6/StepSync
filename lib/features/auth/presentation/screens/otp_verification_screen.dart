@@ -11,6 +11,7 @@ import 'package:step_sync/core/widgets/custom_snackbar.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 import 'package:step_sync/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:step_sync/core/utils/firebase_error_parser.dart';
+import 'package:step_sync/core/widgets/clay_button.dart';
 
 /// OTP verification screen for phone authentication.
 class OtpVerificationScreen extends ConsumerStatefulWidget {
@@ -202,35 +203,29 @@ class _OtpVerificationScreenState
 
                 const SizedBox(height: 32),
 
-                SizedBox(
+                ClayButton(
                   width: double.infinity,
                   height: 56,
-                  child: ElevatedButton(
-                    onPressed: phoneState.isLoading ? null : _sendOtp,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: phoneState.isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            'Send OTP',
-                            style: GoogleFonts.outfit(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
+                  onPressed: phoneState.isLoading ? null : _sendOtp,
+                  color: AppColors.primaryBlue,
+                  borderRadius: 16,
+                  child: phoneState.isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
                           ),
-                  ),
+                        )
+                      : Text(
+                          'Send OTP',
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ] else ...[
                 // OTP input
@@ -241,51 +236,78 @@ class _OtpVerificationScreenState
                     (index) => SizedBox(
                       width: 48,
                       height: 56,
-                      child: TextField(
-                        controller: _otpControllers[index],
-                        focusNode: _otpFocusNodes[index],
-                        textAlign: TextAlign.center,
-                        keyboardType: TextInputType.number,
-                        maxLength: 1,
-                        style: GoogleFonts.outfit(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? AppColors.textDarkPrimary
-                              : AppColors.textLightPrimary,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E2026) : const Color(0xFFE8ECF5),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        decoration: InputDecoration(
-                          counterText: '',
-                          contentPadding: EdgeInsets.zero,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? AppColors.darkBorder
-                                  : AppColors.lightBorder,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppColors.primaryBlue,
-                              width: 2,
-                            ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: CustomPaint(
+                                  painter: _InnerShadowPainter(
+                                    borderRadius: 12,
+                                    shadowColor: isDark ? Colors.black.withOpacity(0.5) : Colors.black.withOpacity(0.08),
+                                    blur: 4,
+                                    offset: const Offset(2, 2),
+                                  ),
+                                ),
+                              ),
+                              Positioned.fill(
+                                child: CustomPaint(
+                                  painter: _InnerShadowPainter(
+                                    borderRadius: 12,
+                                    shadowColor: isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.7),
+                                    blur: 4,
+                                    offset: const Offset(-2, -2),
+                                  ),
+                                ),
+                              ),
+                              TextField(
+                                controller: _otpControllers[index],
+                                focusNode: _otpFocusNodes[index],
+                                textAlign: TextAlign.center,
+                                keyboardType: TextInputType.number,
+                                maxLength: 1,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark
+                                      ? AppColors.textDarkPrimary
+                                      : AppColors.textLightPrimary,
+                                ),
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
+                                decoration: InputDecoration(
+                                  counterText: '',
+                                  contentPadding: EdgeInsets.zero,
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: AppColors.primaryBlue,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                                onChanged: (value) {
+                                  if (value.isNotEmpty && index < 5) {
+                                    _otpFocusNodes[index + 1].requestFocus();
+                                  } else if (value.isEmpty && index > 0) {
+                                    _otpFocusNodes[index - 1].requestFocus();
+                                  }
+                                  if (index == 5 && value.isNotEmpty) {
+                                    _verifyOtp();
+                                  }
+                                },
+                              ),
+                            ],
                           ),
                         ),
-                        onChanged: (value) {
-                          if (value.isNotEmpty && index < 5) {
-                            _otpFocusNodes[index + 1].requestFocus();
-                          } else if (value.isEmpty && index > 0) {
-                            _otpFocusNodes[index - 1].requestFocus();
-                          }
-                          if (index == 5 && value.isNotEmpty) {
-                            _verifyOtp();
-                          }
-                        },
                       ),
                     ),
                   ),
@@ -293,35 +315,29 @@ class _OtpVerificationScreenState
 
                 const SizedBox(height: 32),
 
-                SizedBox(
+                ClayButton(
                   width: double.infinity,
                   height: 56,
-                  child: ElevatedButton(
-                    onPressed: phoneState.isLoading ? null : _verifyOtp,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: phoneState.isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            AppStrings.verifyOtp,
-                            style: GoogleFonts.outfit(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
+                  onPressed: phoneState.isLoading ? null : _verifyOtp,
+                  color: AppColors.primaryBlue,
+                  borderRadius: 16,
+                  child: phoneState.isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
                           ),
-                  ),
+                        )
+                      : Text(
+                          AppStrings.verifyOtp,
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
 
                 const SizedBox(height: 16),
@@ -344,5 +360,47 @@ class _OtpVerificationScreenState
         ),
       ),
     );
+  }
+}
+
+class _InnerShadowPainter extends CustomPainter {
+  final double borderRadius;
+  final Color shadowColor;
+  final double blur;
+  final Offset offset;
+
+  _InnerShadowPainter({
+    required this.borderRadius,
+    required this.shadowColor,
+    required this.blur,
+    required this.offset,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Rect rect = Offset.zero & size;
+    final RRect rrect = RRect.fromRectAndRadius(rect, Radius.circular(borderRadius));
+    final Path path = Path()..addRRect(rrect);
+
+    final Paint shadowPaint = Paint()
+      ..color = shadowColor
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur);
+
+    canvas.saveLayer(rect, Paint());
+    canvas.clipPath(path);
+    canvas.drawPath(path.shift(offset), shadowPaint);
+
+    shadowPaint.blendMode = BlendMode.srcOut;
+    canvas.drawPath(path, shadowPaint);
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _InnerShadowPainter oldDelegate) {
+    return oldDelegate.borderRadius != borderRadius ||
+        oldDelegate.shadowColor != shadowColor ||
+        oldDelegate.blur != blur ||
+        oldDelegate.offset != offset;
   }
 }

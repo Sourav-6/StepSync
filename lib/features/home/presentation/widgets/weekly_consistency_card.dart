@@ -7,6 +7,8 @@ import 'package:step_sync/features/auth/presentation/providers/auth_provider.dar
 import 'package:step_sync/features/steps/presentation/providers/steps_provider.dart';
 import 'package:step_sync/features/steps/domain/entities/daily_steps_entity.dart';
 
+import 'package:step_sync/core/widgets/clay_card.dart';
+
 class WeeklyConsistencyCard extends ConsumerWidget {
   const WeeklyConsistencyCard({super.key});
 
@@ -21,22 +23,10 @@ class WeeklyConsistencyCard extends ConsumerWidget {
 
         final recentStepsAsync = ref.watch(recentStepsProvider(user.uid));
 
-        return Container(
+        return ClayCard(
+          borderRadius: AppDimensions.radiusXl,
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.lightCard,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
-            border: Border.all(
-              color: isDark ? AppColors.darkBorder.withValues(alpha: 0.3) : AppColors.lightBorder,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
+          color: isDark ? AppColors.darkSurface : AppColors.lightCard,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

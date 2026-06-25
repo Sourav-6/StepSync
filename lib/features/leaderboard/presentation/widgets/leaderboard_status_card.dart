@@ -11,6 +11,9 @@ import 'package:step_sync/features/leaderboard/presentation/providers/leaderboar
 import 'package:step_sync/features/leaderboard/presentation/providers/leaderboard_highlights_provider.dart';
 
 
+import 'package:step_sync/core/widgets/clay_card.dart';
+
+
 class LeaderboardStatusCard extends ConsumerWidget {
   const LeaderboardStatusCard({super.key});
 
@@ -27,29 +30,10 @@ class LeaderboardStatusCard extends ConsumerWidget {
     final rank = rankAsync.valueOrNull ?? 0;
     final rankChange = rankChangeAsync.valueOrNull ?? 0;
 
-    return Container(
+    return ClayCard(
+      borderRadius: AppDimensions.radiusLg,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [AppColors.darkSurface, AppColors.darkCard.withValues(alpha: 0.5)]
-              : [AppColors.lightSurface, AppColors.primarySurface.withValues(alpha: 0.3)],
-        ),
-        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        border: Border.all(
-          color: AppColors.primaryBlue.withValues(alpha: 0.3),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryBlue.withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
       child: Row(
         children: [
           // Rank circle

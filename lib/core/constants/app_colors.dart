@@ -36,16 +36,16 @@ class AppColors {
   static const Color errorLight = Color(0xFFF28B82);
 
   // ─── Dark Theme Backgrounds ───
-  static const Color darkBg = Color(0xFF202124);
-  static const Color darkSurface = Color(0xFF303134);
-  static const Color darkCard = Color(0xFF3C4043);
-  static const Color darkBorder = Color(0xFF5F6368);
+  static const Color darkBg = Color(0xFF16181E);      // Softer dark background
+  static const Color darkSurface = Color(0xFF222631); // Soft dark slate surface
+  static const Color darkCard = Color(0xFF2C3242);    // Softer dark slate card
+  static const Color darkBorder = Color(0xFF373E52);
 
   // ─── Light Theme Backgrounds ───
-  static const Color lightBg = Color(0xFFFFFFFF);
-  static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightCard = Color(0xFFF8F9FA);
-  static const Color lightBorder = Color(0xFFDADCE0);
+  static const Color lightBg = Color(0xFFEDF2FA);      // Softer, premium pastel blue-grey background
+  static const Color lightSurface = Color(0xFFF6F8FD); // Pastel blue-grey surface
+  static const Color lightCard = Color(0xFFFFFFFF);    // Clean white card that pops on pastel background
+  static const Color lightBorder = Color(0xFFD3DFEF);
 
   // ─── Text Colors ───
   static const Color textDarkPrimary = Color(0xFFE8EAED);

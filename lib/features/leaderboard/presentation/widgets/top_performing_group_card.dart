@@ -8,6 +8,8 @@ import 'package:step_sync/core/constants/app_strings.dart';
 import 'package:step_sync/features/leaderboard/presentation/providers/leaderboard_highlights_provider.dart';
 
 
+import 'package:step_sync/core/widgets/clay_card.dart';
+
 class TopPerformingGroupCard extends ConsumerWidget {
   const TopPerformingGroupCard({super.key});
 
@@ -26,22 +28,10 @@ class TopPerformingGroupCard extends ConsumerWidget {
             ? (group.totalSteps / group.memberUids.length).round()
             : 0;
 
-        return Container(
+        return ClayCard(
+          borderRadius: AppDimensions.radiusLg,
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.accentOrange.withValues(alpha: isDark ? 0.15 : 0.1),
-                AppColors.goldBadge.withValues(alpha: isDark ? 0.08 : 0.05),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-            border: Border.all(
-              color: AppColors.accentOrange.withValues(alpha: 0.3),
-            ),
-          ),
+          color: isDark ? AppColors.darkSurface : const Color(0xFFFFF8EE),
           child: Row(
             children: [
               // Trophy icon

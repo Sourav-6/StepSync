@@ -11,6 +11,7 @@ import 'package:step_sync/features/achievements/presentation/providers/badges_pr
 import 'package:step_sync/features/achievements/presentation/widgets/achievements_grid.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 import 'package:step_sync/features/leaderboard/presentation/providers/leaderboard_provider.dart';
+import 'package:step_sync/core/widgets/clay_card.dart';
 
 /// User profile screen showing stats, streaks, and actions.
 class ProfileScreen extends ConsumerWidget {
@@ -390,17 +391,10 @@ class ProfileScreen extends ConsumerWidget {
     Color color,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
+    return ClayCard(
+      borderRadius: AppDimensions.radiusLg,
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        border: Border.all(
-          color: isDark
-              ? AppColors.darkBorder.withValues(alpha: 0.2)
-              : AppColors.lightBorder.withValues(alpha: 0.5),
-        ),
-      ),
+      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,

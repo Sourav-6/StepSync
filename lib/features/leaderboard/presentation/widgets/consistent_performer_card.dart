@@ -7,6 +7,8 @@ import 'package:step_sync/core/constants/app_dimensions.dart';
 import 'package:step_sync/core/constants/app_strings.dart';
 import 'package:step_sync/features/leaderboard/presentation/providers/leaderboard_highlights_provider.dart';
 
+import 'package:step_sync/core/widgets/clay_card.dart';
+
 /// Card highlighting the most consistent performer in the global leaderboard.
 class ConsistentPerformerCard extends ConsumerWidget {
   const ConsistentPerformerCard({super.key});
@@ -22,22 +24,10 @@ class ConsistentPerformerCard extends ConsumerWidget {
       data: (performer) {
         if (performer == null) return const SizedBox.shrink();
 
-        return Container(
+        return ClayCard(
+          borderRadius: AppDimensions.radiusLg,
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.secondaryTeal.withValues(alpha: isDark ? 0.15 : 0.1),
-                AppColors.successGreen.withValues(alpha: isDark ? 0.08 : 0.05),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-            border: Border.all(
-              color: AppColors.secondaryTeal.withValues(alpha: 0.3),
-            ),
-          ),
+          color: isDark ? AppColors.darkSurface : const Color(0xFFE8F6ED),
           child: Row(
             children: [
               // Avatar

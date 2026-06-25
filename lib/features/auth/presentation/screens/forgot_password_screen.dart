@@ -10,6 +10,7 @@ import 'package:step_sync/core/utils/validators.dart';
 import 'package:step_sync/core/widgets/custom_snackbar.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 import 'package:step_sync/features/auth/presentation/widgets/auth_text_field.dart';
+import 'package:step_sync/core/widgets/clay_button.dart';
 
 /// Forgot password screen to send reset email.
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -139,35 +140,29 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
                 const SizedBox(height: 32),
 
-                SizedBox(
+                ClayButton(
                   width: double.infinity,
                   height: 56,
-                  child: ElevatedButton(
-                    onPressed: state.isLoading ? null : _sendResetLink,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: state.isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            AppStrings.sendResetLink,
-                            style: GoogleFonts.outfit(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
+                  onPressed: state.isLoading ? null : _sendResetLink,
+                  color: AppColors.primaryBlue,
+                  borderRadius: 16,
+                  child: state.isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
                           ),
-                  ),
+                        )
+                      : Text(
+                          AppStrings.sendResetLink,
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
                 ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1),
               ],
             ),

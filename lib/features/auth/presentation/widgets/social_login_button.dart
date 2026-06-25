@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:step_sync/core/constants/app_colors.dart';
 
+import 'package:step_sync/core/widgets/clay_button.dart';
+
 /// Social login button for Google, Phone, etc.
 class SocialLoginButton extends StatelessWidget {
   final String label;
@@ -20,39 +22,37 @@ class SocialLoginButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
 
-    return SizedBox(
+    return ClayButton(
       width: double.infinity,
       height: 56,
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(
-          icon,
-          size: 24,
-          color: iconColor ??
-              (isDark
+      onPressed: onPressed,
+      color: baseColor,
+      borderRadius: 16,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 24,
+            color: iconColor ??
+                (isDark
+                    ? AppColors.textDarkPrimary
+                    : AppColors.textLightPrimary),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: isDark
                   ? AppColors.textDarkPrimary
-                  : AppColors.textLightPrimary),
-        ),
-        label: Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: isDark
-                ? AppColors.textDarkPrimary
-                : AppColors.textLightPrimary,
+                  : AppColors.textLightPrimary,
+            ),
           ),
-        ),
-        style: OutlinedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          side: BorderSide(
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-        ),
+        ],
       ),
     );
   }

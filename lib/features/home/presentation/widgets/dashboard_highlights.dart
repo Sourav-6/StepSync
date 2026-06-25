@@ -7,6 +7,7 @@ import 'package:step_sync/core/utils/formatters.dart';
 import 'package:step_sync/features/leaderboard/data/datasources/leaderboard_remote_datasource.dart';
 import 'package:step_sync/features/leaderboard/data/models/leaderboard_entry_model.dart';
 import 'package:step_sync/features/groups/data/models/group_model.dart';
+import 'package:step_sync/core/widgets/clay_card.dart';
 
 final leaderboardRemoteProvider = Provider((ref) => LeaderboardRemoteDataSource());
 
@@ -93,20 +94,11 @@ class _HighlightCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    return Container(
+
+    return ClayCard(
+      borderRadius: 16,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -154,12 +146,11 @@ class _HighlightCardLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 100,
-      decoration: BoxDecoration(
-        color: Colors.grey.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-      ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return ClayCard(
+      borderRadius: 16,
+      color: isDark ? AppColors.darkSurface.withOpacity(0.5) : AppColors.lightSurface.withOpacity(0.5),
+      child: const SizedBox(height: 100),
     );
   }
 }

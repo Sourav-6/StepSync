@@ -9,6 +9,8 @@ import 'package:step_sync/core/utils/validators.dart';
 import 'package:step_sync/core/widgets/custom_snackbar.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 import 'package:step_sync/features/auth/presentation/widgets/auth_text_field.dart';
+import 'package:step_sync/core/widgets/clay_button.dart';
+import 'package:step_sync/core/widgets/clay_card.dart';
 
 /// Edit profile screen with name, phone, and photo editing.
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -67,8 +69,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -90,17 +90,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               const SizedBox(height: 16),
 
               // Avatar placeholder
-              Container(
+              ClayCard(
                 width: 100,
                 height: 100,
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(28),
-                ),
-                child: Icon(
-                  Icons.person_rounded,
-                  size: 48,
-                  color: Colors.white,
+                borderRadius: 28,
+                padding: EdgeInsets.zero,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  child: const Icon(
+                    Icons.person_rounded,
+                    size: 48,
+                    color: Colors.white,
+                  ),
                 ),
               ),
 
@@ -141,35 +145,29 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
               const SizedBox(height: 40),
 
-              SizedBox(
+              ClayButton(
                 width: double.infinity,
                 height: 56,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _saveProfile,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          AppStrings.save,
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
+                onPressed: _isLoading ? null : _saveProfile,
+                color: AppColors.primaryBlue,
+                borderRadius: 16,
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: Colors.white,
                         ),
-                ),
+                      )
+                    : Text(
+                        AppStrings.save,
+                        style: GoogleFonts.outfit(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ],
           ),

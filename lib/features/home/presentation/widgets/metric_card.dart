@@ -3,8 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:step_sync/core/constants/app_colors.dart';
 import 'package:step_sync/core/constants/app_dimensions.dart';
 import 'package:step_sync/core/widgets/animated_counter.dart';
+import 'package:step_sync/core/widgets/clay_card.dart';
 
-/// A glassmorphism-style metric card for dashboard.
+/// A premium claymorphic metric card for dashboard.
 class MetricCard extends StatelessWidget {
   final String label;
   final String value;
@@ -29,28 +30,12 @@ class MetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
+    return ClayCard(
+      borderRadius: AppDimensions.radiusLg,
       padding: const EdgeInsets.all(AppDimensions.cardPadding),
-      decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkSurface.withValues(alpha: 0.8)
-            : AppColors.lightSurface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        border: Border.all(
-          color: isDark
-              ? AppColors.darkBorder.withValues(alpha: 0.3)
-              : AppColors.lightBorder.withValues(alpha: 0.5),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.2)
-                : Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      color: isDark
+          ? AppColors.darkSurface
+          : AppColors.lightSurface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -12,6 +12,7 @@ import 'package:step_sync/features/auth/presentation/providers/auth_provider.dar
 import 'package:step_sync/features/history/presentation/providers/history_provider.dart';
 import 'package:step_sync/features/steps/domain/entities/daily_steps_entity.dart';
 import 'package:step_sync/features/steps/presentation/providers/steps_provider.dart';
+import 'package:step_sync/core/widgets/clay_card.dart';
 
 /// History screen with Daily / Weekly / Monthly tabs and charts.
 class HistoryScreen extends ConsumerWidget {
@@ -173,13 +174,11 @@ class _DailyView extends ConsumerWidget {
     Color color,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
+    return ClayCard(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(24),
-      ),
+      color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
+      borderRadius: 24,
       child: Row(
         children: [
           Container(
@@ -251,13 +250,11 @@ class _WeeklyView extends ConsumerWidget {
               const SizedBox(height: 20),
 
               // Bar chart
-              Container(
+              ClayCard(
                 height: AppDimensions.chartHeight + 40,
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(24),
-                ),
+                color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
+                borderRadius: 24,
                 child: _buildBarChart(days, isDark),
               ).animate().fadeIn(duration: 500.ms),
 
@@ -422,12 +419,10 @@ class _WeeklyView extends ConsumerWidget {
     Color color,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
+    return ClayCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(24),
-      ),
+      color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
+      borderRadius: 24,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -492,13 +487,11 @@ class _MonthlyView extends ConsumerWidget {
               const SizedBox(height: 20),
 
               // Line chart
-              Container(
+              ClayCard(
                 height: AppDimensions.chartHeight + 40,
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(24),
-                ),
+                color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
+                borderRadius: 24,
                 child: _buildLineChart(days, isDark),
               ).animate().fadeIn(duration: 500.ms),
 
@@ -673,12 +666,10 @@ class _MonthlyView extends ConsumerWidget {
     Color color,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
+    return ClayCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(24),
-      ),
+      color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
+      borderRadius: 24,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

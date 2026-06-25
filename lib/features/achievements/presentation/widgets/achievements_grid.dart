@@ -5,6 +5,8 @@ import 'package:step_sync/core/constants/app_dimensions.dart';
 import 'package:step_sync/features/achievements/domain/entities/achievement_badge.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import 'package:step_sync/core/widgets/clay_card.dart';
+
 class AchievementsGrid extends StatelessWidget {
   final List<AchievementBadge> badges;
   final String title;
@@ -54,27 +56,11 @@ class AchievementsGrid extends StatelessWidget {
   }
 
   Widget _buildBadgeCard(BuildContext context, AchievementBadge badge, bool isDark) {
-    return Container(
+    final baseColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    return ClayCard(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        border: Border.all(
-          color: badge.isUnlocked
-              ? badge.color.withValues(alpha: 0.5)
-              : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-          width: badge.isUnlocked ? 1.5 : 1.0,
-        ),
-        boxShadow: badge.isUnlocked
-            ? [
-                BoxShadow(
-                  color: badge.color.withValues(alpha: 0.15),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                )
-              ]
-            : null,
-      ),
+      borderRadius: AppDimensions.radiusLg,
+      color: badge.isUnlocked ? badge.color.withValues(alpha: 0.12) : baseColor,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

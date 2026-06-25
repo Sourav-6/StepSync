@@ -11,6 +11,7 @@ import 'package:step_sync/core/widgets/custom_snackbar.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 import 'package:step_sync/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:step_sync/core/utils/firebase_error_parser.dart';
+import 'package:step_sync/core/widgets/clay_button.dart';
 
 /// Registration screen with name, email, and password.
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -192,36 +193,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 32),
 
                 // Sign up button
-                SizedBox(
+                ClayButton(
                   width: double.infinity,
                   height: 56,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _signUp,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            AppStrings.signUp,
-                            style: GoogleFonts.outfit(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
+                  onPressed: _isLoading ? null : _signUp,
+                  color: AppColors.primaryBlue,
+                  borderRadius: 16,
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
                           ),
-                  ),
+                        )
+                      : Text(
+                          AppStrings.signUp,
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
                 ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.1),
 
                 const SizedBox(height: 24),

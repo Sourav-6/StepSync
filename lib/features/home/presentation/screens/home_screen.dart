@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:step_sync/core/constants/app_colors.dart';
 import 'package:step_sync/core/constants/app_dimensions.dart';
 import 'package:step_sync/core/constants/app_strings.dart';
+import 'package:step_sync/core/widgets/clay_card.dart';
 import 'package:step_sync/core/utils/formatters.dart';
 import 'package:step_sync/core/widgets/loading_shimmer.dart';
 import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
@@ -186,29 +187,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 28),
 
                   // ─── Motivational Message ───
-                  Container(
-                    width: double.infinity,
+                  ClayCard(
+                    borderRadius: AppDimensions.radiusLg,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 14,
                     ),
-                    decoration: BoxDecoration(
-                      gradient: stepData.goalReached
-                          ? AppColors.successGradient
-                          : AppColors.primaryGradient,
-                      borderRadius:
-                          BorderRadius.circular(AppDimensions.radiusLg),
-                      boxShadow: [
-                        BoxShadow(
-                          color: (stepData.goalReached
-                                  ? AppColors.successGreen
-                                  : AppColors.primaryBlue)
-                              .withValues(alpha: 0.3),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
+                    color: stepData.goalReached
+                        ? AppColors.successGreen
+                        : AppColors.primaryBlue,
                     child: Row(
                       children: [
                         Icon(

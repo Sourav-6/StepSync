@@ -44,7 +44,7 @@ class DarkTheme {
         color: AppColors.darkSurface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           side: const BorderSide(color: AppColors.darkBorder, width: 1),
         ),
         margin: EdgeInsets.zero,

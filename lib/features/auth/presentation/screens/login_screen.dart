@@ -12,6 +12,7 @@ import 'package:step_sync/features/auth/presentation/providers/auth_provider.dar
 import 'package:step_sync/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:step_sync/features/auth/presentation/widgets/social_login_button.dart';
 import 'package:step_sync/core/utils/firebase_error_parser.dart';
+import 'package:step_sync/core/widgets/clay_button.dart';
 
 /// Login screen with email/password, Google, and phone auth options.
 class LoginScreen extends ConsumerStatefulWidget {
@@ -175,36 +176,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 16),
 
                 // Sign in button
-                SizedBox(
+                ClayButton(
                   width: double.infinity,
                   height: 56,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _signInWithEmail,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            AppStrings.signIn,
-                            style: GoogleFonts.outfit(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
+                  onPressed: _isLoading ? null : _signInWithEmail,
+                  color: AppColors.primaryBlue,
+                  borderRadius: 16,
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
                           ),
-                  ),
+                        )
+                      : Text(
+                          AppStrings.signIn,
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
                 ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.1),
 
                 const SizedBox(height: 24),

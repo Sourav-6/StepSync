@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:step_sync/core/constants/app_colors.dart';
 import 'package:step_sync/core/utils/formatters.dart';
+import 'package:go_router/go_router.dart';
 import 'package:step_sync/features/leaderboard/data/datasources/leaderboard_remote_datasource.dart';
 import 'package:step_sync/features/leaderboard/data/models/leaderboard_entry_model.dart';
 import 'package:step_sync/features/groups/data/models/group_model.dart';
@@ -51,6 +52,7 @@ class DashboardHighlights extends ConsumerWidget {
                   value: winner != null ? '${(winner.consistencyScore * 5.0).toStringAsFixed(1)}★ rating' : '-',
                   icon: Icons.star_rounded,
                   color: AppColors.primaryBlue,
+                  onTap: () => context.push('/leaderboard'),
                 ),
                 loading: () => const _HighlightCardLoading(),
                 error: (_, __) => const SizedBox(),
@@ -65,6 +67,7 @@ class DashboardHighlights extends ConsumerWidget {
                   value: group != null ? '${Formatters.formatNumber(group.totalSteps ~/ (group.memberUids.isNotEmpty ? group.memberUids.length : 1))} avg steps' : '-',
                   icon: Icons.groups_rounded,
                   color: AppColors.secondaryTeal,
+                  onTap: () => context.push('/groups'),
                 ),
                 loading: () => const _HighlightCardLoading(),
                 error: (_, __) => const SizedBox(),
@@ -83,6 +86,7 @@ class _HighlightCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
 
   const _HighlightCard({
     required this.title,
@@ -90,6 +94,7 @@ class _HighlightCard extends StatelessWidget {
     required this.value,
     required this.icon,
     required this.color,
+    this.onTap,
   });
 
   @override
@@ -97,6 +102,7 @@ class _HighlightCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ClayCard(
+      onTap: onTap,
       borderRadius: 16,
       padding: const EdgeInsets.all(16),
       color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
@@ -150,7 +156,7 @@ class _HighlightCardLoading extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return ClayCard(
       borderRadius: 16,
-      color: isDark ? AppColors.darkSurface.withOpacity(0.5) : AppColors.lightSurface.withOpacity(0.5),
+      color: isDark ? AppColors.darkSurface.withValues(alpha: 0.5) : AppColors.lightSurface.withValues(alpha: 0.5),
       child: const SizedBox(height: 100),
     );
   }

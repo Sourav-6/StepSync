@@ -15,6 +15,8 @@ import 'package:step_sync/features/home/presentation/widgets/dashboard_highlight
 import 'package:step_sync/features/home/presentation/widgets/weekly_consistency_card.dart';
 import 'package:step_sync/features/steps/presentation/providers/steps_provider.dart';
 import 'package:step_sync/features/leaderboard/presentation/providers/leaderboard_provider.dart';
+import 'package:step_sync/features/notifications/presentation/providers/notifications_provider.dart';
+import 'package:go_router/go_router.dart';
 
 /// Main home dashboard screen showing step progress, metrics, and status.
 class HomeScreen extends ConsumerStatefulWidget {
@@ -83,6 +85,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final userState = ref.watch(currentUserProvider);
     final stepData = ref.watch(todayStepsProvider);
+    final unreadCount = ref.watch(unreadNotificationsCountProvider);
 
     // The StepCountNotifier handles polling and syncing automatically now.
 
@@ -133,7 +136,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ],
                       ),
-                      // Profile avatar
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => context.push('/notifications'),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.notifications_none_rounded,
+                                    size: 22,
+                                    color: isDark ? AppColors.textDarkPrimary : AppColors.textLightPrimary,
+                                  ),
+                                ),
+                                if (unreadCount > 0)
+                                  Positioned(
+                                    right: -2,
+                                    top: -2,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(5),
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.errorRed,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Text(
+                                        unreadCount > 9 ? '9+' : unreadCount.toString(),
+                                        style: GoogleFonts.inter(
+                                          fontSize: 10,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Profile avatar
                       GestureDetector(
                         onTap: () {},
                         child: Container(
@@ -164,13 +213,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               : _buildAvatarPlaceholder(userName),
                         ),
                       ),
-                    ],
+                      ],
+                    )],
                   )
                       .animate()
                       .fadeIn(duration: 400.ms)
                       .slideY(begin: -0.1),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
 
                   
                   Center(
@@ -185,7 +235,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       .fadeIn(delay: 200.ms, duration: 600.ms)
                       .scale(begin: const Offset(0.9, 0.9)),
 
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 16),
 
                   // ─── Motivational Message ───
                   ClayCard(
@@ -222,7 +272,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
 
                   
                   Row(
@@ -236,6 +286,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           icon: Icons.route_rounded,
                           iconColor: AppColors.secondaryTeal,
                           animatedDoubleValue: stepData.distance,
+                          onTap: () => context.push('/history'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -248,12 +299,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           icon: Icons.local_fire_department_rounded,
                           iconColor: AppColors.accentOrange,
                           animatedDoubleValue: stepData.calories,
+                          onTap: () => context.push('/history'),
                         ),
                       ),
                     ],
                   ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
 
                   Row(
                     children: [
@@ -265,6 +317,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           icon: Icons.whatshot_rounded,
                           iconColor: AppColors.errorRed,
                           animatedValue: streak,
+                          onTap: () => context.push('/history'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -276,18 +329,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           icon: Icons.leaderboard_rounded,
                           iconColor: AppColors.goldBadge,
                           animatedValue: rank,
+                          onTap: () => context.push('/leaderboard'),
                         ),
                       ),
                     ],
                   ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.1),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   const DashboardHighlights().animate().fadeIn(delay: 650.ms).slideY(begin: 0.1),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   const WeeklyConsistencyCard().animate().fadeIn(delay: 700.ms).slideY(begin: 0.1),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
 
                   // ─── Daily Achievement Badge ───
                   if (stepData.goalReached)

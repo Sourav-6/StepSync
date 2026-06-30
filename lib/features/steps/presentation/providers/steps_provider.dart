@@ -6,6 +6,7 @@ import 'package:step_sync/core/utils/formatters.dart';
 import 'package:step_sync/features/steps/data/repositories/steps_repository_impl.dart';
 import 'package:step_sync/features/steps/domain/entities/daily_steps_entity.dart';
 import 'package:step_sync/features/steps/domain/repositories/steps_repository.dart';
+import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
 
 /// Provider for the steps repository.
 final stepsRepositoryProvider = Provider<StepsRepository>((ref) {
@@ -17,15 +18,16 @@ final stepsRepositoryProvider = Provider<StepsRepository>((ref) {
 /// Provider for real-time step count via Health Connect.
 final stepCountProvider =
     StateNotifierProvider<StepCountNotifier, AsyncValue<int>>((ref) {
-  return StepCountNotifier(ref.watch(stepsRepositoryProvider));
+  return StepCountNotifier(ref.watch(stepsRepositoryProvider), ref);
 });
 
 class StepCountNotifier extends StateNotifier<AsyncValue<int>> {
   final StepsRepository _repository;
+  final Ref _ref;
   Timer? _refreshTimer;
   int _lastSyncedSteps = 0;
 
-  StepCountNotifier(this._repository) : super(const AsyncValue.data(0)) {
+  StepCountNotifier(this._repository, this._ref) : super(const AsyncValue.data(0)) {
     // Delay first refresh to ensure the activity is fully in foreground
     // and the permission dialogs can be shown properly.
     Future.delayed(const Duration(seconds: 2), () {
@@ -81,6 +83,9 @@ class StepCountNotifier extends StateNotifier<AsyncValue<int>> {
       await _repository.cacheSteps(today, steps);
       _lastSyncedSteps = steps;
       debugPrint('✅ Steps synced to Firebase: $steps');
+      
+      // Refresh current user to pick up new star rating and referral bag balance!
+      _ref.read(currentUserProvider.notifier).refresh();
     } catch (e) {
       debugPrint('❌ Step sync failed: $e');
     }

@@ -3,10 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:step_sync/core/constants/app_colors.dart';
 import 'package:step_sync/core/constants/app_dimensions.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:step_sync/core/widgets/golden_star_badge.dart';
-
+import 'package:step_sync/core/utils/formatters.dart';
+import 'package:step_sync/features/auth/presentation/providers/auth_provider.dart';
+import 'package:step_sync/features/groups/presentation/providers/groups_provider.dart';
+import 'package:step_sync/features/steps/presentation/providers/steps_provider.dart';
 /// Animated circular progress ring for displaying step goal progress.
-class StepProgressRing extends StatefulWidget {
+class StepProgressRing extends ConsumerStatefulWidget {
   final double progress; // 0.0 - 1.0
   final int steps;
   final int goal;
@@ -25,10 +29,10 @@ class StepProgressRing extends StatefulWidget {
   });
 
   @override
-  State<StepProgressRing> createState() => _StepProgressRingState();
+  ConsumerState<StepProgressRing> createState() => _StepProgressRingState();
 }
 
-class _StepProgressRingState extends State<StepProgressRing>
+class _StepProgressRingState extends ConsumerState<StepProgressRing>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _progressAnimation;
@@ -114,7 +118,7 @@ class _StepProgressRingState extends State<StepProgressRing>
                       return Text(
                         _formatNumber(value),
                         style: GoogleFonts.outfit(
-                          fontSize: 40,
+                          fontSize: 32,
                           fontWeight: FontWeight.w700,
                           color: Theme.of(context).colorScheme.onSurface,
                           height: 1.1,
@@ -123,9 +127,9 @@ class _StepProgressRingState extends State<StepProgressRing>
                     },
                   ),
                   const SizedBox(height: 2),
-                  // Goal text
+                  // Steps label
                   Text(
-                    '/ ${_formatNumber(widget.goal)} steps',
+                    'steps',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       color: Theme.of(context).brightness == Brightness.dark
@@ -153,15 +157,68 @@ class _StepProgressRingState extends State<StepProgressRing>
     );
   }
 
-  void _showRatingBreakdown(BuildContext context) {
+  Future<void> _showRatingBreakdown(BuildContext context) async {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    final user = ref.read(currentUserProvider).value;
+    
+    // Calculate Group Stars
+    double bestGroupAvg = 0.0;
+    if (user != null) {
+      try {
+        final userGroups = await ref.read(userGroupsProvider.future);
+        for (var group in userGroups) {
+          if (group.starRating > bestGroupAvg) {
+            bestGroupAvg = group.starRating;
+          }
+        }
+      } catch (_) {}
+    }
+    double groupStars = (bestGroupAvg / 5.0).clamp(0.0, 1.0);
+
+    // Calculate Weekly Consistency Stars
+    double weeklyStars = 0.0;
+    if (user != null) {
+      try {
+        final recentSteps = await ref.read(recentStepsProvider(user.uid).future);
+        List<int> stepsList = recentSteps.map((e) => e.steps).toList();
+        
+        bool todayFound = false;
+        final todayStr = Formatters.formatDateKey(DateTime.now());
+        for (var s in recentSteps) {
+          if (s.date == todayStr) {
+            todayFound = true;
+            break;
+          }
+        }
+        if (!todayFound) {
+          stepsList.add(widget.steps);
+        }
+        
+        stepsList.sort((a, b) => b.compareTo(a));
+        final best5 = stepsList.take(5).toList();
+        final sum = best5.fold<int>(0, (prev, element) => prev + element);
+        final avg = sum / 5; // always divide by 5 to match backend
+        weeklyStars = (avg / 10000).clamp(0.0, 1.0);
+      } catch (_) {}
+    }
+
+    // Daily Stars
+    double dailyStars = (widget.steps / 10000).clamp(0.0, 1.0) * 2.0;
+    
+    // Referral Stars
+    double referralStars = (user?.referralBagStars ?? 0) > 0 ? 1.0 : 0.0;
+
+    if (!context.mounted) return;
 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -172,68 +229,229 @@ class _StepProgressRingState extends State<StepProgressRing>
             ),
           ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.star_rounded, color: AppColors.goldBadge, size: 28),
-                const SizedBox(width: 8),
-                Text(
-                  'Star Rating Breakdown',
-                  style: GoogleFonts.outfit(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.textDarkPrimary : AppColors.textLightPrimary,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.star_rounded, color: AppColors.goldBadge, size: 28),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Today\'s Rating',
+                    style: GoogleFonts.outfit(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.textDarkPrimary : AppColors.textLightPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Your overall rating is composed of 4 elements. Here is what you earned today:',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
+                ),
+              ),
+              const SizedBox(height: 24),
+              _buildSimpleBreakdownRow(
+                context,
+                icon: Icons.directions_walk_rounded,
+                title: 'Daily Steps',
+                earnedStars: dailyStars,
+                maxStars: 2,
+                isDark: isDark,
+              ),
+              _buildSimpleBreakdownRow(
+                context,
+                icon: Icons.card_giftcard_rounded,
+                title: 'Referral Bag',
+                earnedStars: referralStars,
+                maxStars: 1,
+                isDark: isDark,
+              ),
+              _buildSimpleBreakdownRow(
+                context,
+                icon: Icons.calendar_month_rounded,
+                title: 'Weekly Consistency',
+                earnedStars: weeklyStars,
+                maxStars: 1,
+                isDark: isDark,
+              ),
+              _buildSimpleBreakdownRow(
+                context,
+                icon: Icons.groups_rounded,
+                title: 'Group Average',
+                earnedStars: groupStars,
+                maxStars: 1,
+                isDark: isDark,
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: TextButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showRatingGuidelines(context);
+                  },
+                  icon: const Icon(Icons.help_outline_rounded, size: 18),
+                  label: const Text('How is my rating calculated?'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primaryBlue,
                   ),
                 ),
-              ],
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showRatingGuidelines(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border(
+            top: BorderSide(
+              color: AppColors.goldBadge.withValues(alpha: 0.3),
+              width: 1,
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Your overall rating is calculated from 4 distinct sources. Achieve your goals to earn all 5 stars!',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, color: AppColors.goldBadge, size: 28),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Rating Guidelines',
+                    style: GoogleFonts.outfit(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.textDarkPrimary : AppColors.textLightPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Achieve your goals across 4 categories to earn all 5 stars!',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
+                ),
+              ),
+              const SizedBox(height: 24),
+              _buildBreakdownRow(
+                context,
+                icon: Icons.directions_walk_rounded,
+                title: 'Daily Steps',
+                maxStars: 2,
+                description: 'Earn up to 2 stars. One star for completing 5k steps, and another for completing 10k steps total.',
+                isDark: isDark,
+              ),
+              _buildBreakdownRow(
+                context,
+                icon: Icons.card_giftcard_rounded,
+                title: 'Referral Bag',
+                maxStars: 1,
+                description: 'Earn 1 star automatically as long as you have a positive balance in your referral bag.',
+                isDark: isDark,
+              ),
+              _buildBreakdownRow(
+                context,
+                icon: Icons.calendar_month_rounded,
+                title: 'Weekly Consistency',
+                maxStars: 1,
+                description: 'Earn up to 1 star by maintaining a 10k daily step average over your best 5 of the last 7 days.',
+                isDark: isDark,
+              ),
+              _buildBreakdownRow(
+                context,
+                icon: Icons.groups_rounded,
+                title: 'Group Average',
+                maxStars: 1,
+                description: 'Earn up to 1 star based on the highest average rating among all the groups you have joined.',
+                isDark: isDark,
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSimpleBreakdownRow(BuildContext context, {
+    required IconData icon,
+    required String title,
+    required double earnedStars,
+    required int maxStars,
+    required bool isDark,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: AppColors.primaryBlue, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              title,
+              style: GoogleFonts.outfit(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: isDark ? AppColors.textDarkPrimary : AppColors.textLightPrimary,
               ),
             ),
-            const SizedBox(height: 24),
-            _buildBreakdownRow(
-              context,
-              icon: Icons.directions_walk_rounded,
-              title: 'Daily Steps',
-              maxStars: 2,
-              description: 'Earn up to 2 stars by reaching your 10,000 daily step goal.',
-              isDark: isDark,
-            ),
-            _buildBreakdownRow(
-              context,
-              icon: Icons.card_giftcard_rounded,
-              title: 'Referral Bag',
-              maxStars: 1,
-              description: 'Earn 1 star as long as you have a balance in your referral bag.',
-              isDark: isDark,
-            ),
-            _buildBreakdownRow(
-              context,
-              icon: Icons.calendar_month_rounded,
-              title: 'Weekly Consistency',
-              maxStars: 1,
-              description: 'Earn 1 star by maintaining a 10k average over your best 5 of the last 7 days.',
-              isDark: isDark,
-            ),
-            _buildBreakdownRow(
-              context,
-              icon: Icons.groups_rounded,
-              title: 'Group Average',
-              maxStars: 1,
-              description: 'Earn up to 1 star based on the highest average rating among your groups.',
-              isDark: isDark,
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
+          ),
+          Row(
+            children: [
+              Text(
+                earnedStars.toStringAsFixed(1),
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.goldBadge,
+                ),
+              ),
+              Text(
+                ' / $maxStars ★',
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

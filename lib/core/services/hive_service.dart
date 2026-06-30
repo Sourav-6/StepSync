@@ -12,6 +12,9 @@ class HiveService {
   static const String settingsBox = 'settings_box';
   static const String cacheBox = 'cache_box';
 
+  /// Get the cache box.
+  static Box get cache => Hive.box(cacheBox);
+
   // ─── Settings Keys ───
   static const String keyDarkMode = 'dark_mode';
   static const String keyDailyGoal = 'daily_goal';

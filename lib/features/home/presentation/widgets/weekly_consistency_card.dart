@@ -8,6 +8,7 @@ import 'package:step_sync/features/steps/presentation/providers/steps_provider.d
 import 'package:step_sync/features/steps/domain/entities/daily_steps_entity.dart';
 import 'package:step_sync/features/auth/domain/entities/user_entity.dart';
 import 'package:step_sync/core/widgets/golden_star_badge.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:step_sync/core/widgets/clay_card.dart';
 
@@ -26,6 +27,7 @@ class WeeklyConsistencyCard extends ConsumerWidget {
         final recentStepsAsync = ref.watch(recentStepsProvider(user.uid));
 
         return ClayCard(
+          onTap: () => context.push('/history'),
           borderRadius: AppDimensions.radiusXl,
           padding: const EdgeInsets.all(20),
           color: isDark ? AppColors.darkSurface : AppColors.lightCard,

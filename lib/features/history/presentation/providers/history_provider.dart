@@ -7,28 +7,73 @@ import 'package:step_sync/features/steps/presentation/providers/steps_provider.d
 enum HistoryTab { daily, weekly, monthly }
 
 /// Provider for selected history tab.
-final historyTabProvider =
-    StateProvider<HistoryTab>((ref) => HistoryTab.daily);
+final historyTabProvider = StateProvider<HistoryTab>((ref) => HistoryTab.daily);
 
-/// Provider for weekly history (last 7 days).
-final weeklyHistoryProvider =
-    FutureProvider.family<List<DailyStepsEntity>, String>((ref, uid) async {
-  final repo = ref.watch(stepsRepositoryProvider);
-  return repo.getRecentSteps(uid: uid, days: 7);
+/// Track the currently viewed month (defaults to current month).
+final selectedMonthProvider = StateProvider<DateTime>((ref) {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month, 1);
 });
 
-/// Provider for monthly history.
-final monthlyHistoryProvider =
-    FutureProvider.family<List<DailyStepsEntity>, String>((ref, uid) async {
-  final repo = ref.watch(stepsRepositoryProvider);
+/// Track the currently viewed week (Monday of that week).
+final selectedWeekProvider = StateProvider<DateTime>((ref) {
   final now = DateTime.now();
-  final startDate = Formatters.formatDateKey(DateTime(now.year, now.month, 1));
-  final endDate = Formatters.formatDateKey(now);
+  // Find the Monday of the current week
+  final monday = now.subtract(Duration(days: now.weekday - 1));
+  return DateTime(monday.year, monday.month, monday.day);
+});
+
+/// Fetch up to 4 months of data to minimize reads, and cache it.
+final cachedHistoryProvider = FutureProvider.family<List<DailyStepsEntity>, String>((ref, uid) async {
+  final repo = ref.watch(stepsRepositoryProvider);
+  
+  // Keep alive to cache the data in memory for this session
+  ref.keepAlive();
+  
+  final now = DateTime.now();
+  // Fetch from 3 months ago (so total 4 months: current + 3 previous)
+  final startDate = DateTime(now.year, now.month - 3, 1);
+  final endStr = Formatters.formatDateKey(now);
+  final startStr = Formatters.formatDateKey(startDate);
+  
   return repo.getStepHistory(
     uid: uid,
-    startDate: startDate,
-    endDate: endDate,
+    startDate: startStr,
+    endDate: endStr,
   );
+});
+
+/// Filtered data for the specific selected month.
+final selectedMonthHistoryProvider = Provider.family<List<DailyStepsEntity>, String>((ref, uid) {
+  final allData = ref.watch(cachedHistoryProvider(uid)).value ?? [];
+  final selectedMonth = ref.watch(selectedMonthProvider);
+  
+  return allData.where((d) {
+    try {
+      final parts = d.date.split('-');
+      final dDate = DateTime(int.parse(parts[0]), int.parse(parts[1]), 1);
+      return dDate.year == selectedMonth.year && dDate.month == selectedMonth.month;
+    } catch (_) {
+      return false;
+    }
+  }).toList();
+});
+
+/// Filtered data for the specific selected week (Mon - Sun).
+final selectedWeekHistoryProvider = Provider.family<List<DailyStepsEntity>, String>((ref, uid) {
+  final allData = ref.watch(cachedHistoryProvider(uid)).value ?? [];
+  final selectedWeek = ref.watch(selectedWeekProvider);
+  final endOfWeek = selectedWeek.add(const Duration(days: 6, hours: 23, minutes: 59));
+  
+  return allData.where((d) {
+    try {
+      final parts = d.date.split('-');
+      final dDate = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+      return !dDate.isBefore(selectedWeek) && !dDate.isAfter(endOfWeek);
+    } catch (_) {
+      return false;
+    }
+  }).toList();
 });
 
 /// Computed weekly stats.

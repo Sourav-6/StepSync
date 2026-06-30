@@ -27,6 +27,36 @@ class FriendEntity {
     this.requestReceived = false,
   });
 
+  Map<String, dynamic> toMap() {
+    return {
+      'uid': uid,
+      'name': name,
+      'profileImage': profileImage,
+      'totalSteps': totalSteps,
+      'consistencyScore': consistencyScore,
+      'starRating': starRating,
+      'currentStreak': currentStreak,
+      'isFriend': isFriend,
+      'requestPending': requestPending,
+      'requestReceived': requestReceived,
+    };
+  }
+
+  factory FriendEntity.fromMap(Map<String, dynamic> map) {
+    return FriendEntity(
+      uid: map['uid'] ?? '',
+      name: map['name'] ?? '',
+      profileImage: map['profileImage'] ?? '',
+      totalSteps: map['totalSteps'] ?? 0,
+      consistencyScore: (map['consistencyScore'] as num?)?.toDouble() ?? 0.0,
+      starRating: (map['starRating'] as num?)?.toDouble() ?? 0.0,
+      currentStreak: map['currentStreak'] ?? 0,
+      isFriend: map['isFriend'] ?? false,
+      requestPending: map['requestPending'] ?? false,
+      requestReceived: map['requestReceived'] ?? false,
+    );
+  }
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

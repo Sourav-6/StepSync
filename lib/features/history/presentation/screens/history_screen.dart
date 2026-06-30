@@ -118,57 +118,196 @@ class HistoryScreen extends ConsumerWidget {
 }
 
 /// Daily view showing today's summary.
-class _DailyView extends ConsumerWidget {
+String _monthName(int month) {
+  const months = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  return months[month];
+}
+
+class _MonthSelector extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedMonth = ref.watch(selectedMonthProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    void changeMonth(int offset) {
+      final newMonth = DateTime(selectedMonth.year, selectedMonth.month + offset, 1);
+      final now = DateTime.now();
+      final minDate = DateTime(now.year, now.month - 3, 1);
+      final maxDate = DateTime(now.year, now.month, 1);
+      
+      if (newMonth.isAfter(maxDate) || newMonth.isBefore(minDate)) return;
+      ref.read(selectedMonthProvider.notifier).state = newMonth;
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          onPressed: () => changeMonth(-1),
+          icon: Icon(Icons.chevron_left, color: isDark ? Colors.white : Colors.black),
+        ),
+        Text(
+          '${_monthName(selectedMonth.month)} ${selectedMonth.year}',
+          style: GoogleFonts.outfit(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        IconButton(
+          onPressed: () => changeMonth(1),
+          icon: Icon(Icons.chevron_right, color: isDark ? Colors.white : Colors.black),
+        ),
+      ],
+    );
+  }
+}
+
+/// Daily view showing a calendar and selected day's summary.
+class _DailyView extends ConsumerStatefulWidget {
   final String uid;
   const _DailyView({required this.uid});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final stepData = ref.watch(todayStepsProvider);
+  ConsumerState<_DailyView> createState() => _DailyViewState();
+}
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppDimensions.screenPadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Today's Summary",
-            style: GoogleFonts.outfit(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: isDark
-                  ? AppColors.textDarkPrimary
-                  : AppColors.textLightPrimary,
-            ),
+class _DailyViewState extends ConsumerState<_DailyView> {
+  DateTime? selectedDate;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cachedData = ref.watch(cachedHistoryProvider(widget.uid));
+
+    return cachedData.when(
+      loading: () => const DashboardShimmer(),
+      error: (e, _) => Center(child: Text('Error: $e')),
+      data: (allData) {
+        final monthData = ref.watch(selectedMonthHistoryProvider(widget.uid));
+        final selectedMonth = ref.watch(selectedMonthProvider);
+        
+        // Build Calendar Grid
+        final daysInMonth = DateTime(selectedMonth.year, selectedMonth.month + 1, 0).day;
+        final firstDayWeekday = DateTime(selectedMonth.year, selectedMonth.month, 1).weekday;
+        
+        final daysMap = {for (var d in monthData) d.date: d};
+        
+        final selectedDateStr = selectedDate != null ? Formatters.formatDateKey(selectedDate!) : Formatters.formatDateKey(DateTime.now());
+        final selectedDayData = daysMap[selectedDateStr] ?? DailyStepsEntity(
+            uid: widget.uid,
+            date: selectedDateStr,
+            steps: 0,
+            distance: 0.0,
+            calories: 0.0,
+            starRating: 0.0,
+        );
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppDimensions.screenPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _MonthSelector(),
+              const SizedBox(height: 16),
+              ClayCard(
+                padding: const EdgeInsets.all(16),
+                color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
+                borderRadius: 24,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d) => 
+                        Text(d, style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: isDark ? Colors.white54 : Colors.black54))
+                      ).toList(),
+                    ),
+                    const SizedBox(height: 8),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 7,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        childAspectRatio: 1.3,
+                      ),
+                      itemCount: daysInMonth + firstDayWeekday - 1,
+                      itemBuilder: (context, index) {
+                        if (index < firstDayWeekday - 1) return const SizedBox();
+                        final dayNumber = index - firstDayWeekday + 2;
+                        final currentDate = DateTime(selectedMonth.year, selectedMonth.month, dayNumber);
+                        final dateStr = Formatters.formatDateKey(currentDate);
+                        final dayData = daysMap[dateStr];
+                        final isSelected = selectedDateStr == dateStr;
+                        final hasSteps = (dayData?.steps ?? 0) > 0;
+                        
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedDate = currentDate;
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
+                              color: isSelected 
+                                  ? AppColors.primaryBlue 
+                                  : (hasSteps ? AppColors.primaryBlue.withValues(alpha: 0.2) : Colors.transparent),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSelected ? AppColors.primaryBlue : (isDark ? Colors.white12 : Colors.black12),
+                              )
+                            ),
+                            child: Center(
+                              child: Text(
+                                dayNumber.toString(),
+                                style: GoogleFonts.inter(
+                                  color: isSelected ? Colors.white : (isDark ? Colors.white : Colors.black),
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn(),
+              const SizedBox(height: 24),
+              Text(
+                "Day Summary",
+                style: GoogleFonts.outfit(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? AppColors.textDarkPrimary : AppColors.textLightPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildStatRow(
+                context, 'Steps', Formatters.formatNumber(selectedDayData.steps),
+                Icons.directions_walk_rounded, AppColors.primaryBlue,
+              ),
+              _buildStatRow(
+                context, 'Distance', Formatters.formatDistance(selectedDayData.distance),
+                Icons.route_rounded, AppColors.secondaryTeal,
+              ),
+              _buildStatRow(
+                context, 'Calories', Formatters.formatCalories(selectedDayData.calories),
+                Icons.local_fire_department_rounded, AppColors.accentOrange,
+              ),
+              _buildStatRow(
+                context, 'Star Rating', '${selectedDayData.starRating.toStringAsFixed(1)} ★',
+                Icons.star_rounded, AppColors.goldBadge,
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          _buildStatRow(
-            context, 'Steps', Formatters.formatNumber(stepData.steps),
-            Icons.directions_walk_rounded, AppColors.primaryBlue,
-          ),
-          _buildStatRow(
-            context, 'Distance',
-            Formatters.formatDistance(stepData.distance),
-            Icons.route_rounded, AppColors.secondaryTeal,
-          ),
-          _buildStatRow(
-            context, 'Calories',
-            Formatters.formatCalories(stepData.calories),
-            Icons.local_fire_department_rounded, AppColors.accentOrange,
-          ),
-        ].animate(interval: 100.ms).fadeIn().slideX(begin: 0.05),
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildStatRow(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+  Widget _buildStatRow(BuildContext context, String label, String value, IconData icon, Color color) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return ClayCard(
       margin: const EdgeInsets.only(bottom: 12),
@@ -192,9 +331,7 @@ class _DailyView extends ConsumerWidget {
               label,
               style: GoogleFonts.inter(
                 fontSize: 15,
-                color: isDark
-                    ? AppColors.textDarkSecondary
-                    : AppColors.textLightSecondary,
+                color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
               ),
             ),
           ),
@@ -212,7 +349,48 @@ class _DailyView extends ConsumerWidget {
   }
 }
 
-/// Weekly view with bar chart.
+class _WeekSelector extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedWeek = ref.watch(selectedWeekProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    void changeWeek(int offset) {
+      final newWeek = selectedWeek.add(Duration(days: offset * 7));
+      final now = DateTime.now();
+      final minDate = DateTime(now.year, now.month - 3, 1);
+      if (newWeek.isAfter(now) || newWeek.isBefore(minDate)) return;
+      ref.read(selectedWeekProvider.notifier).state = newWeek;
+    }
+
+    final endOfWeek = selectedWeek.add(const Duration(days: 6));
+    final formatStart = '${_monthName(selectedWeek.month).substring(0,3)} ${selectedWeek.day}';
+    final formatEnd = '${_monthName(endOfWeek.month).substring(0,3)} ${endOfWeek.day}';
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          onPressed: () => changeWeek(-1),
+          icon: Icon(Icons.chevron_left, color: isDark ? Colors.white : Colors.black),
+        ),
+        Text(
+          '$formatStart - $formatEnd',
+          style: GoogleFonts.outfit(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        IconButton(
+          onPressed: () => changeWeek(1),
+          icon: Icon(Icons.chevron_right, color: isDark ? Colors.white : Colors.black),
+        ),
+      ],
+    );
+  }
+}
+
+/// Weekly view with bar chart showing 7 days.
 class _WeeklyView extends ConsumerWidget {
   final String uid;
   const _WeeklyView({required this.uid});
@@ -220,60 +398,66 @@ class _WeeklyView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final weeklyData = ref.watch(weeklyHistoryProvider(uid));
+    final cachedData = ref.watch(cachedHistoryProvider(uid));
 
-    return weeklyData.when(
+    return cachedData.when(
       loading: () => const DashboardShimmer(),
       error: (e, _) => Center(child: Text('Error: $e')),
-      data: (days) {
-        final stats = WeeklyStats.fromDays(days);
+      data: (allData) {
+        final weekData = ref.watch(selectedWeekHistoryProvider(uid));
+        final selectedWeek = ref.watch(selectedWeekProvider);
+        
+        final daysMap = {for (var d in weekData) d.date: d};
+        
+        final dailySteps = <double>[];
+        int totalSteps = 0;
+        int maxStepDayIndex = 0;
+        int maxStepVal = 0;
+        
+        for (var i = 0; i < 7; i++) {
+          final d = selectedWeek.add(Duration(days: i));
+          final dateStr = Formatters.formatDateKey(d);
+          final steps = daysMap[dateStr]?.steps ?? 0;
+          dailySteps.add(steps.toDouble());
+          totalSteps += steps;
+          if (steps > maxStepVal) {
+            maxStepVal = steps;
+            maxStepDayIndex = i;
+          }
+        }
+        
+        final weekAvg = totalSteps / 7;
+        final dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        final bestDayName = maxStepVal > 0 ? dayNames[maxStepDayIndex] : 'N/A';
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.screenPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                AppStrings.last7Days,
-                style: GoogleFonts.outfit(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? AppColors.textDarkPrimary
-                      : AppColors.textLightPrimary,
-                ),
-              ),
+              _WeekSelector(),
               const SizedBox(height: 20),
-
-              // Bar chart
               ClayCard(
                 height: AppDimensions.chartHeight + 40,
                 padding: const EdgeInsets.all(16),
                 color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
                 borderRadius: 24,
-                child: _buildBarChart(days, isDark),
+                child: _buildBarChart(dailySteps, isDark),
               ).animate().fadeIn(duration: 500.ms),
-
               const SizedBox(height: 20),
-
-              // Summary cards
               Row(
                 children: [
                   Expanded(
                     child: _buildSummaryCard(
-                      context,
-                      'Total Steps',
-                      Formatters.formatNumber(stats.totalSteps),
-                      AppColors.primaryBlue,
+                      context, 'Total Steps',
+                      Formatters.formatNumber(totalSteps), AppColors.primaryBlue,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildSummaryCard(
-                      context,
-                      'Avg/Day',
-                      Formatters.formatNumber(stats.avgSteps.round()),
-                      AppColors.secondaryTeal,
+                      context, 'Daily Avg',
+                      Formatters.formatNumber(weekAvg.round()), AppColors.secondaryTeal,
                     ),
                   ),
                 ],
@@ -283,21 +467,12 @@ class _WeeklyView extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: _buildSummaryCard(
-                      context,
-                      'Distance',
-                      Formatters.formatDistance(stats.totalDistance),
-                      AppColors.accentOrange,
+                      context, 'Best Day',
+                      bestDayName, AppColors.goldBadge,
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildSummaryCard(
-                      context,
-                      'Calories',
-                      Formatters.formatCalories(stats.totalCalories),
-                      AppColors.errorRed,
-                    ),
-                  ),
+                  const Expanded(child: SizedBox()),
                 ],
               ),
             ],
@@ -307,26 +482,12 @@ class _WeeklyView extends ConsumerWidget {
     );
   }
 
-  Widget _buildBarChart(List<DailyStepsEntity> days, bool isDark) {
-    final now = DateTime.now();
-    final last7 = List.generate(7, (i) {
-      final date = now.subtract(Duration(days: 6 - i));
-      return Formatters.formatDateKey(date);
-    });
+  Widget _buildBarChart(List<double> dailySteps, bool isDark) {
+    final maxSteps = dailySteps.isEmpty 
+        ? 10000.0 
+        : (dailySteps.reduce((a, b) => a > b ? a : b) + 1000).clamp(10000.0, double.infinity);
 
-    final dayNames = List.generate(7, (i) {
-      final date = now.subtract(Duration(days: 6 - i));
-      return Formatters.formatDayNameShort(date);
-    });
-
-    final stepsMap = <String, int>{};
-    for (final d in days) {
-      stepsMap[d.date] = d.steps;
-    }
-
-    final maxSteps = stepsMap.values.isEmpty
-        ? 10000.0
-        : stepsMap.values.reduce((a, b) => a > b ? a : b).toDouble();
+    final dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     return BarChart(
       BarChartData(
@@ -337,11 +498,7 @@ class _WeeklyView extends ConsumerWidget {
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               return BarTooltipItem(
                 Formatters.formatNumber(rod.toY.round()),
-                GoogleFonts.inter(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                ),
+                GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
               );
             },
           ),
@@ -353,38 +510,28 @@ class _WeeklyView extends ConsumerWidget {
               showTitles: true,
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
-                if (index < 0 || index >= dayNames.length) {
-                  return const SizedBox();
-                }
+                if (index < 0 || index > 6) return const SizedBox();
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     dayNames[index],
                     style: GoogleFonts.inter(
                       fontSize: 11,
-                      color: isDark
-                          ? AppColors.textDarkSecondary
-                          : AppColors.textLightSecondary,
+                      color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
                     ),
                   ),
                 );
               },
             ),
           ),
-          leftTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          rightTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
+          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         borderData: FlBorderData(show: false),
         gridData: const FlGridData(show: false),
         barGroups: List.generate(7, (i) {
-          final steps = (stepsMap[last7[i]] ?? 0).toDouble();
+          final steps = dailySteps[i];
           return BarChartGroupData(
             x: i,
             barRods: [
@@ -395,10 +542,7 @@ class _WeeklyView extends ConsumerWidget {
                 gradient: LinearGradient(
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
-                  colors: [
-                    AppColors.primaryBlue,
-                    AppColors.primaryLight,
-                  ],
+                  colors: [AppColors.primaryBlue, AppColors.primaryLight],
                 ),
               ),
             ],
@@ -408,12 +552,7 @@ class _WeeklyView extends ConsumerWidget {
     );
   }
 
-  Widget _buildSummaryCard(
-    BuildContext context,
-    String label,
-    String value,
-    Color color,
-  ) {
+  Widget _buildSummaryCard(BuildContext context, String label, String value, Color color) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return ClayCard(
       padding: const EdgeInsets.all(16),
@@ -426,9 +565,7 @@ class _WeeklyView extends ConsumerWidget {
             label,
             style: GoogleFonts.inter(
               fontSize: 12,
-              color: isDark
-                  ? AppColors.textDarkSecondary
-                  : AppColors.textLightSecondary,
+              color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
             ),
           ),
           const SizedBox(height: 6),
@@ -446,7 +583,7 @@ class _WeeklyView extends ConsumerWidget {
   }
 }
 
-/// Monthly view with line chart and calendar summary.
+/// Monthly view with bar chart showing weeks of the month.
 class _MonthlyView extends ConsumerWidget {
   final String uid;
   const _MonthlyView({required this.uid});
@@ -454,72 +591,72 @@ class _MonthlyView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final monthlyData = ref.watch(monthlyHistoryProvider(uid));
+    final cachedData = ref.watch(cachedHistoryProvider(uid));
 
-    return monthlyData.when(
+    return cachedData.when(
       loading: () => const DashboardShimmer(),
       error: (e, _) => Center(child: Text('Error: $e')),
-      data: (days) {
-        final stats = MonthlyStats.fromDays(days);
-        final now = DateTime.now();
+      data: (allData) {
+        final monthData = ref.watch(selectedMonthHistoryProvider(uid));
+        
+        // Group by week of month
+        final weeksMap = <int, List<DailyStepsEntity>>{1: [], 2: [], 3: [], 4: [], 5: []};
+        for (var d in monthData) {
+          try {
+            final parts = d.date.split('-');
+            final day = int.parse(parts[2]);
+            final weekNum = ((day - 1) / 7).floor() + 1;
+            weeksMap[weekNum]?.add(d);
+          } catch (_) {}
+        }
+        
+        final weeklyTotals = <int, double>{};
+        double grandTotal = 0;
+        int activeDays = 0;
+        
+        for (var i = 1; i <= 5; i++) {
+          final list = weeksMap[i]!;
+          if (list.isEmpty) {
+            weeklyTotals[i] = 0;
+          } else {
+            final sum = list.fold<int>(0, (p, c) => p + c.steps);
+            grandTotal += sum;
+            activeDays += list.where((x) => x.steps > 0).length;
+            weeklyTotals[i] = sum.toDouble();
+          }
+        }
+        
+        final overallAvg = activeDays == 0 ? 0 : grandTotal / activeDays;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.screenPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                Formatters.formatDateMinimal(now).split(' ').first.isEmpty
-                    ? 'This Month'
-                    : '${_monthName(now.month)} ${now.year}',
-                style: GoogleFonts.outfit(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? AppColors.textDarkPrimary
-                      : AppColors.textLightPrimary,
-                ),
-              ),
+              _MonthSelector(),
               const SizedBox(height: 20),
-
-              // Line chart
               ClayCard(
                 height: AppDimensions.chartHeight + 40,
                 padding: const EdgeInsets.all(16),
                 color: isDark ? AppColors.darkSurface : const Color(0xFFF3F4F6),
                 borderRadius: 24,
-                child: _buildLineChart(days, isDark),
+                child: _buildBarChart(weeklyTotals, isDark),
               ).animate().fadeIn(duration: 500.ms),
-
               const SizedBox(height: 20),
-
-              // Monthly summary
               Row(
                 children: [
                   Expanded(
-                    child: _buildStat(context, AppStrings.totalMonthlySteps,
-                        Formatters.formatNumber(stats.totalSteps), AppColors.primaryBlue),
+                    child: _buildSummaryCard(
+                      context, 'Total Steps',
+                      Formatters.formatNumber(grandTotal.round()), AppColors.primaryBlue,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _buildStat(context, AppStrings.averageDailySteps,
-                        Formatters.formatNumber(stats.avgDailySteps.round()),
-                        AppColors.secondaryTeal),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStat(context, 'Active Days',
-                        '${stats.activeDays}', AppColors.successGreen),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStat(context, 'Total Calories',
-                        Formatters.formatCalories(stats.totalCalories),
-                        AppColors.accentOrange),
+                    child: _buildSummaryCard(
+                      context, 'Active Avg',
+                      Formatters.formatNumber(overallAvg.round()), AppColors.secondaryTeal,
+                    ),
                   ),
                 ],
               ),
@@ -530,56 +667,23 @@ class _MonthlyView extends ConsumerWidget {
     );
   }
 
-  Widget _buildLineChart(List<DailyStepsEntity> days, bool isDark) {
-    if (days.isEmpty) {
-      return Center(
-        child: Text(
-          'No data yet',
-          style: GoogleFonts.inter(
-            color: isDark
-                ? AppColors.textDarkSecondary
-                : AppColors.textLightSecondary,
-          ),
-        ),
-      );
-    }
-
-    // Sort by date
-    final sorted = List<DailyStepsEntity>.from(days)
-      ..sort((a, b) => a.date.compareTo(b.date));
-
-    final maxSteps = sorted
-        .reduce((a, b) => a.steps > b.steps ? a : b)
-        .steps
-        .toDouble();
-
-    return LineChart(
-      LineChartData(
-        lineTouchData: LineTouchData(
-          touchTooltipData: LineTouchTooltipData(
-            getTooltipItems: (spots) {
-              return spots.map((spot) {
-                return LineTooltipItem(
-                  Formatters.formatNumber(spot.y.round()),
-                  GoogleFonts.inter(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                  ),
-                );
-              }).toList();
+  Widget _buildBarChart(Map<int, double> weeklyTotals, bool isDark) {
+    final maxSteps = weeklyTotals.values.isEmpty 
+        ? 10000.0 
+        : (weeklyTotals.values.reduce((a, b) => a > b ? a : b) + 1000).clamp(10000.0, double.infinity);
+        
+    return BarChart(
+      BarChartData(
+        alignment: BarChartAlignment.spaceAround,
+        maxY: maxSteps * 1.2,
+        barTouchData: BarTouchData(
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              return BarTooltipItem(
+                Formatters.formatNumber(rod.toY.round()),
+                GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
+              );
             },
-          ),
-        ),
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: false,
-          horizontalInterval: maxSteps / 4,
-          getDrawingHorizontalLine: (value) => FlLine(
-            color: isDark
-                ? AppColors.darkBorder.withValues(alpha: 0.15)
-                : AppColors.lightBorder.withValues(alpha: 0.3),
-            strokeWidth: 1,
           ),
         ),
         titlesData: FlTitlesData(
@@ -587,80 +691,49 @@ class _MonthlyView extends ConsumerWidget {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              interval: (sorted.length / 5).ceilToDouble().clamp(1, 10),
               getTitlesWidget: (value, meta) {
-                final index = value.toInt();
-                if (index < 0 || index >= sorted.length) {
-                  return const SizedBox();
-                }
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    sorted[index].date.split('-').last,
+                    "Week ${value.toInt() + 1}",
                     style: GoogleFonts.inter(
-                      fontSize: 10,
-                      color: isDark
-                          ? AppColors.textDarkSecondary
-                          : AppColors.textLightSecondary,
+                      fontSize: 11,
+                      color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
                     ),
                   ),
                 );
               },
             ),
           ),
-          leftTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          rightTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
+          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         borderData: FlBorderData(show: false),
-        lineBarsData: [
-          LineChartBarData(
-            spots: sorted.asMap().entries.map((e) {
-              return FlSpot(e.key.toDouble(), e.value.steps.toDouble());
-            }).toList(),
-            isCurved: true,
-            curveSmoothness: 0.3,
-            color: AppColors.secondaryTeal,
-            barWidth: 3,
-            isStrokeCapRound: true,
-            dotData: FlDotData(
-              show: true,
-              getDotPainter: (spot, __, ___, ____) => FlDotCirclePainter(
-                radius: 4,
-                color: AppColors.secondaryTeal,
-                strokeWidth: 2,
-                strokeColor: isDark ? AppColors.darkBg : Colors.white,
+        gridData: const FlGridData(show: false),
+        barGroups: List.generate(5, (i) {
+          final steps = weeklyTotals[i + 1] ?? 0.0;
+          return BarChartGroupData(
+            x: i,
+            barRods: [
+              BarChartRodData(
+                toY: steps,
+                width: AppDimensions.barChartBarWidth,
+                borderRadius: BorderRadius.circular(6),
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [AppColors.secondaryTeal, AppColors.successGreen],
+                ),
               ),
-            ),
-            belowBarData: BarAreaData(
-              show: true,
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.secondaryTeal.withValues(alpha: 0.3),
-                  AppColors.secondaryTeal.withValues(alpha: 0.0),
-                ],
-              ),
-            ),
-          ),
-        ],
+            ],
+          );
+        }),
       ),
     );
   }
 
-  Widget _buildStat(
-    BuildContext context,
-    String label,
-    String value,
-    Color color,
-  ) {
+  Widget _buildSummaryCard(BuildContext context, String label, String value, Color color) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return ClayCard(
       padding: const EdgeInsets.all(16),
@@ -673,9 +746,7 @@ class _MonthlyView extends ConsumerWidget {
             label,
             style: GoogleFonts.inter(
               fontSize: 12,
-              color: isDark
-                  ? AppColors.textDarkSecondary
-                  : AppColors.textLightSecondary,
+              color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
             ),
           ),
           const SizedBox(height: 6),
@@ -690,13 +761,5 @@ class _MonthlyView extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  String _monthName(int month) {
-    const months = [
-      '', 'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
-    ];
-    return months[month];
   }
 }

@@ -7,12 +7,16 @@ class RatingResult {
   final Map<String, double> groupRatings;
   final double weeklyAvgRating;
   final double monthlyAvgRating;
+  final int newReferralBagStars;
+  final bool deductedToday;
 
   RatingResult({
     required this.starRating, 
     required this.groupRatings,
     required this.weeklyAvgRating,
     required this.monthlyAvgRating,
+    required this.newReferralBagStars,
+    required this.deductedToday,
   });
 }
 
@@ -29,6 +33,7 @@ class RatingService {
     required int todaySteps,
     required int dailyGoal,
     required int currentReferralBagStars,
+    required bool referralStarUsedToday,
   }) async {
     double totalRating = 0.0;
     
@@ -38,9 +43,14 @@ class RatingService {
 
     // ─── Star 3: Referral Bag ───
     int newReferralBagStars = currentReferralBagStars;
-    if (newReferralBagStars > 0) {
+    bool deductedToday = false;
+
+    if (referralStarUsedToday) {
+      totalRating += 1.0;
+    } else if (newReferralBagStars > 0) {
       totalRating += 1.0;
       newReferralBagStars -= 1;
+      deductedToday = true;
     }
 
     final now = DateTime.now();
@@ -178,6 +188,8 @@ class RatingService {
       groupRatings: groupRatings,
       weeklyAvgRating: weeklyAvg,
       monthlyAvgRating: monthlyAvg,
+      newReferralBagStars: newReferralBagStars,
+      deductedToday: deductedToday,
     );
   }
 }

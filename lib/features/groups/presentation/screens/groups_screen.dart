@@ -180,7 +180,12 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> with SingleTickerPr
               padding: const EdgeInsets.only(top: 4.0),
               child: Row(
                 children: [
-                  Text('${group.memberUids.length} members • ${group.isPublic ? 'Public' : 'Private'}'),
+                  Expanded(
+                    child: Text(
+                      '${group.memberUids.length} members • ${group.isPublic ? 'Public' : 'Private'}',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   GoldenStarBadge(rating: group.starRating, fontSize: 12, iconSize: 12),
                 ],

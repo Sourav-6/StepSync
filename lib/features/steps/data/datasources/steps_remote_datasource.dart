@@ -144,21 +144,45 @@ class StepsRemoteDataSource {
     // ─── 5-Star Rating & Referral Bag Logic ───
     final ratingService = RatingService(firestore: _firestore);
     final currentReferralBagStars = (userDoc.data()?[FirestorePaths.fieldReferralBagStars] as int?) ?? 0;
+    final lastReferralStarUsedDate = (userDoc.data()?['lastReferralStarUsedDate'] as String?) ?? '';
+    final todayStr = Formatters.formatDateKey(DateTime.now());
+    final referralStarUsedToday = lastReferralStarUsedDate == todayStr;
     
     final ratingResult = await ratingService.calculateRating(
       uid: uid, 
       todaySteps: todaySteps, 
       dailyGoal: dailyGoal, 
       currentReferralBagStars: currentReferralBagStars,
+      referralStarUsedToday: referralStarUsedToday,
     );
 
-    await _firestore.collection(FirestorePaths.users).doc(uid).update({
+    final userUpdateData = <String, dynamic>{
       FirestorePaths.fieldTotalSteps: totalSteps,
       FirestorePaths.fieldConsistencyScore: consistencyScore,
       FirestorePaths.fieldStarRating: ratingResult.starRating,
       'weeklyAvgStarRating': ratingResult.weeklyAvgRating,
       'monthlyAvgStarRating': ratingResult.monthlyAvgRating,
-    });
+    };
+
+    if (ratingResult.deductedToday) {
+      userUpdateData[FirestorePaths.fieldReferralBagStars] = ratingResult.newReferralBagStars;
+      userUpdateData['lastReferralStarUsedDate'] = todayStr;
+      
+      // Add notification for the user
+      final notifRef = _firestore.collection(FirestorePaths.users).doc(uid).collection('notifications').doc();
+      final batch = _firestore.batch();
+      batch.set(notifRef, {
+        'title': 'Referral Star Used 🌟',
+        'body': '1 star was used from your Referral Bag to boost your daily rating. You have ${ratingResult.newReferralBagStars} stars left.',
+        'type': 'star_deduction',
+        'isRead': false,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      batch.update(_firestore.collection(FirestorePaths.users).doc(uid), userUpdateData);
+      await batch.commit();
+    } else {
+      await _firestore.collection(FirestorePaths.users).doc(uid).update(userUpdateData);
+    }
     
     // Handle Referral Bag filling when hitting 10k steps
     if (todaySteps >= 10000) {

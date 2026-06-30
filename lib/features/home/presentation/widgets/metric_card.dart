@@ -14,6 +14,7 @@ class MetricCard extends StatelessWidget {
   final Color iconColor;
   final int? animatedValue;
   final double? animatedDoubleValue;
+  final VoidCallback? onTap;
 
   const MetricCard({
     super.key,
@@ -24,6 +25,7 @@ class MetricCard extends StatelessWidget {
     this.iconColor = AppColors.primaryBlue,
     this.animatedValue,
     this.animatedDoubleValue,
+    this.onTap,
   });
 
   @override
@@ -31,6 +33,7 @@ class MetricCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ClayCard(
+      onTap: onTap,
       borderRadius: AppDimensions.radiusLg,
       padding: const EdgeInsets.all(AppDimensions.cardPadding),
       color: isDark
@@ -67,7 +70,7 @@ class MetricCard extends StatelessWidget {
             AnimatedCounter(
               value: animatedValue!,
               style: GoogleFonts.outfit(
-                fontSize: 22,
+                fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: isDark
                     ? AppColors.textDarkPrimary
@@ -78,7 +81,7 @@ class MetricCard extends StatelessWidget {
             AnimatedDecimalCounter(
               value: animatedDoubleValue!,
               style: GoogleFonts.outfit(
-                fontSize: 22,
+                fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: isDark
                     ? AppColors.textDarkPrimary
@@ -89,7 +92,7 @@ class MetricCard extends StatelessWidget {
             Text(
               value,
               style: GoogleFonts.outfit(
-                fontSize: 22,
+                fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: isDark
                     ? AppColors.textDarkPrimary

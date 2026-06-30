@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:step_sync/core/constants/firestore_paths.dart';
 import 'package:step_sync/features/friends/domain/entities/friend_entity.dart';
 import 'package:step_sync/features/friends/domain/entities/friend_request_entity.dart';
+import 'package:step_sync/core/services/cache_service.dart';
 
 /// Firestore data source for friends system operations.
 class FriendsRemoteDataSource {
@@ -84,6 +85,12 @@ class FriendsRemoteDataSource {
 
   /// Fetch the friends list with user details.
   Future<List<FriendEntity>> getFriendsList(String uid) async {
+    final cacheKey = 'friends_list_$uid';
+    final cachedData = CacheService.getCache(cacheKey, const Duration(minutes: 5));
+    if (cachedData != null) {
+      return (cachedData as List).map((e) => FriendEntity.fromMap(Map<String, dynamic>.from(e))).toList();
+    }
+
     final userDoc = await _firestore.collection(FirestorePaths.users).doc(uid).get();
     if (!userDoc.exists) return [];
 
@@ -93,7 +100,9 @@ class FriendsRemoteDataSource {
 
     if (friendUids.isEmpty) return [];
 
-    return _fetchUserEntities(friendUids, isFriend: true);
+    final results = await _fetchUserEntities(friendUids, isFriend: true);
+    CacheService.setCache(cacheKey, results.map((e) => e.toMap()).toList());
+    return results;
   }
 
   /// Get incoming friend requests with sender details.
@@ -198,6 +207,12 @@ class FriendsRemoteDataSource {
 
   /// Get friends leaderboard sorted by consistency score.
   Future<List<FriendEntity>> getFriendsLeaderboard(String uid) async {
+    final cacheKey = 'friends_leaderboard_$uid';
+    final cachedData = CacheService.getCache(cacheKey, const Duration(minutes: 5));
+    if (cachedData != null) {
+      return (cachedData as List).map((e) => FriendEntity.fromMap(Map<String, dynamic>.from(e))).toList();
+    }
+
     final friends = await getFriendsList(uid);
 
     // Also include the current user
@@ -217,6 +232,8 @@ class FriendsRemoteDataSource {
 
     // Sort by consistency score descending
     friends.sort((a, b) => b.consistencyScore.compareTo(a.consistencyScore));
+    
+    CacheService.setCache(cacheKey, friends.map((e) => e.toMap()).toList());
     return friends;
   }
 
@@ -288,42 +305,45 @@ class FriendsRemoteDataSource {
     return entities;
   }
 
-  /// Get the list of users who have contributed stars to the current user's referral bag.
   Future<List<Map<String, dynamic>>> getReferralContributors(String uid) async {
-    final querySnapshot = await _firestore
+    // 1. Get all users who were referred by the current user
+    final usersQuery = await _firestore
+        .collection(FirestorePaths.users)
+        .where(FirestorePaths.fieldReferredBy, isEqualTo: uid)
+        .get();
+
+    if (usersQuery.docs.isEmpty) return [];
+
+    // 2. Get the stars they have given
+    final starsQuery = await _firestore
         .collection(FirestorePaths.users)
         .doc(uid)
         .collection('referral_stars_given')
         .get();
 
-    if (querySnapshot.docs.isEmpty) return [];
+    final starsMap = {
+      for (var doc in starsQuery.docs)
+        doc.id: {
+          'count': (doc.data()[FirestorePaths.fieldStarsGivenCount] as int?) ?? 0,
+          'lastUpdated': (doc.data()['lastUpdated'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        }
+    };
 
     List<Map<String, dynamic>> contributors = [];
 
-    // Need to fetch user details for each contributor
-    final userIds = querySnapshot.docs.map((d) => d.id).toList();
+    for (final userDoc in usersQuery.docs) {
+      final userId = userDoc.id;
+      final starData = starsMap[userId];
+      final starsGiven = starData?['count'] as int? ?? 0;
+      final lastUpdated = starData?['lastUpdated'] as DateTime? ?? DateTime.now();
 
-    for (var i = 0; i < userIds.length; i += 10) {
-      final chunk = userIds.sublist(i, i + 10 > userIds.length ? userIds.length : i + 10);
-      final usersQuery = await _firestore
-          .collection(FirestorePaths.users)
-          .where(FieldPath.documentId, whereIn: chunk)
-          .get();
-
-      for (final userDoc in usersQuery.docs) {
-        final userId = userDoc.id;
-        final referralDoc = querySnapshot.docs.firstWhere((d) => d.id == userId);
-        final starsGiven = (referralDoc.data()[FirestorePaths.fieldStarsGivenCount] as int?) ?? 0;
-        final lastUpdated = (referralDoc.data()['lastUpdated'] as Timestamp?)?.toDate() ?? DateTime.now();
-
-        contributors.add({
-          'uid': userId,
-          'name': userDoc.data()[FirestorePaths.fieldName] ?? 'Unknown User',
-          'profileImage': userDoc.data()[FirestorePaths.fieldProfileImage] ?? '',
-          'starsGiven': starsGiven,
-          'lastUpdated': lastUpdated,
-        });
-      }
+      contributors.add({
+        'uid': userId,
+        'name': userDoc.data()[FirestorePaths.fieldName] ?? 'Unknown User',
+        'profileImage': userDoc.data()[FirestorePaths.fieldProfileImage] ?? '',
+        'starsGiven': starsGiven,
+        'lastUpdated': lastUpdated,
+      });
     }
 
     return contributors;

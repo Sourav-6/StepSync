@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:step_sync/core/constants/firestore_paths.dart';
 import 'package:step_sync/features/groups/data/models/group_model.dart';
+import 'package:step_sync/core/services/cache_service.dart';
 
 class GroupsRemoteDataSource {
   final FirebaseFirestore _firestore;
@@ -33,6 +34,12 @@ class GroupsRemoteDataSource {
   }
 
   Future<List<GroupModel>> getAllDiscoverableGroups() async {
+    const cacheKey = 'all_discoverable_groups';
+    final cachedData = CacheService.getCache(cacheKey, const Duration(minutes: 5));
+    if (cachedData != null) {
+      return (cachedData as List).map((e) => GroupModel.fromCacheMap(Map<String, dynamic>.from(e))).toList();
+    }
+
     // Return all groups. We'll filter in the UI to show public groups and private groups.
     final query = await _firestore
         .collection(FirestorePaths.groups)
@@ -40,16 +47,32 @@ class GroupsRemoteDataSource {
         .limit(100)
         .get();
 
-    return query.docs.map((doc) => GroupModel.fromFirestore(doc)).toList();
+    final results = query.docs.map((doc) => GroupModel.fromFirestore(doc)).toList();
+    
+    // Save to cache
+    CacheService.setCache(cacheKey, results.map((e) => e.toCacheMap()).toList());
+    
+    return results;
   }
 
   Future<List<GroupModel>> getUserGroups(String uid) async {
+    final cacheKey = 'user_groups_$uid';
+    final cachedData = CacheService.getCache(cacheKey, const Duration(minutes: 5));
+    if (cachedData != null) {
+      return (cachedData as List).map((e) => GroupModel.fromCacheMap(Map<String, dynamic>.from(e))).toList();
+    }
+
     final query = await _firestore
         .collection(FirestorePaths.groups)
         .where('memberUids', arrayContains: uid)
         .get();
 
-    return query.docs.map((doc) => GroupModel.fromFirestore(doc)).toList();
+    final results = query.docs.map((doc) => GroupModel.fromFirestore(doc)).toList();
+    
+    // Save to cache
+    CacheService.setCache(cacheKey, results.map((e) => e.toCacheMap()).toList());
+    
+    return results;
   }
 
   Future<void> joinPublicGroup(String groupId, String uid) async {

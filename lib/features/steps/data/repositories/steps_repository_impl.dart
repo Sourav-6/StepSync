@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:step_sync/core/services/cache_service.dart';
 
 import 'package:step_sync/features/steps/data/datasources/health_datasource.dart';
 import 'package:step_sync/features/steps/data/datasources/steps_local_datasource.dart';
@@ -47,12 +48,19 @@ class StepsRepositoryImpl implements StepsRepository {
     required String date,
     required int steps,
   }) async {
-    final model = DailyStepsModel.fromSteps(
-      uid: uid,
-      date: date,
-      steps: steps,
-    );
-    await _remoteDataSource.saveDailySteps(model);
+    // Only save to remote if 5 minutes have passed since last sync to save writes
+    final canSync = await CacheService.canProceed('sync_steps_$date', const Duration(minutes: 5));
+    
+    if (canSync) {
+      final model = DailyStepsModel.fromSteps(
+        uid: uid,
+        date: date,
+        steps: steps,
+      );
+      await _remoteDataSource.saveDailySteps(model);
+    }
+    
+    // Always update local cache
     await _localDataSource.cacheSteps(date, steps);
   }
 

@@ -48,6 +48,38 @@ class GroupModel extends GroupEntity {
     };
   }
 
+  Map<String, dynamic> toCacheMap() {
+    return {
+      'groupId': groupId,
+      'name': name,
+      'description': description,
+      'isPublic': isPublic,
+      'adminUids': adminUids,
+      'memberUids': memberUids,
+      'invitedUids': invitedUids,
+      'pendingRequestUids': pendingRequestUids,
+      'totalSteps': totalSteps,
+      'starRating': starRating,
+      'createdAt': createdAt.millisecondsSinceEpoch,
+    };
+  }
+
+  factory GroupModel.fromCacheMap(Map<String, dynamic> map) {
+    return GroupModel(
+      groupId: map['groupId'] ?? '',
+      name: map['name'] as String? ?? '',
+      description: map['description'] as String? ?? '',
+      isPublic: map['isPublic'] as bool? ?? true,
+      adminUids: List<String>.from(map['adminUids'] ?? []),
+      memberUids: List<String>.from(map['memberUids'] ?? []),
+      invitedUids: List<String>.from(map['invitedUids'] ?? []),
+      pendingRequestUids: List<String>.from(map['pendingRequestUids'] ?? []),
+      totalSteps: map['totalSteps'] as int? ?? 0,
+      starRating: (map['starRating'] as num?)?.toDouble() ?? 0.0,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int? ?? DateTime.now().millisecondsSinceEpoch),
+    );
+  }
+
   factory GroupModel.fromEntity(GroupEntity entity) {
     return GroupModel(
       groupId: entity.groupId,

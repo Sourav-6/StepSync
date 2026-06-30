@@ -3,6 +3,7 @@ import 'package:step_sync/core/constants/firestore_paths.dart';
 import 'package:step_sync/core/utils/formatters.dart';
 import 'package:step_sync/features/leaderboard/data/models/leaderboard_entry_model.dart';
 import 'package:step_sync/features/groups/data/models/group_model.dart';
+import 'package:step_sync/core/services/cache_service.dart';
 
 /// Remote data source for leaderboard data using Firestore.
 class LeaderboardRemoteDataSource {
@@ -19,7 +20,9 @@ class LeaderboardRemoteDataSource {
         .collection(FirestorePaths.users)
         .snapshots()
         .map((snapshot) {
-      final entries = snapshot.docs.map((doc) {
+      final entries = snapshot.docs
+          .where((doc) => doc.id != 'system_login_bonus')
+          .map((doc) {
         return LeaderboardEntryModel.fromFirestore(doc, 0); // Temporary rank
       }).toList();
 
@@ -179,6 +182,12 @@ class LeaderboardRemoteDataSource {
   Future<List<GroupModel>> getMonthlyTopGroups({
     int limit = 10,
   }) async {
+    final cacheKey = 'monthly_top_groups_$limit';
+    final cachedData = CacheService.getCache(cacheKey, const Duration(minutes: 5));
+    if (cachedData != null) {
+      return (cachedData as List).map((e) => GroupModel.fromCacheMap(Map<String, dynamic>.from(e))).toList();
+    }
+
     final now = DateTime.now();
     final dates = List.generate(
       now.day,
@@ -236,7 +245,9 @@ class LeaderboardRemoteDataSource {
       return avgB.compareTo(avgA);
     });
 
-    return monthlyGroups.take(limit).toList();
+    final results = monthlyGroups.take(limit).toList();
+    CacheService.setCache(cacheKey, results.map((e) => e.toCacheMap()).toList());
+    return results;
   }
 
   /// Get top groups leaderboard based on average steps per member as a real-time stream.

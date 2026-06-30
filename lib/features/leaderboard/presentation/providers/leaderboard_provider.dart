@@ -5,7 +5,7 @@ import 'package:step_sync/features/leaderboard/data/datasources/leaderboard_remo
 import 'package:step_sync/features/leaderboard/domain/entities/leaderboard_entry.dart';
 
 /// Leaderboard filter types.
-enum LeaderboardFilter { today, thisWeek, thisMonth, consistency }
+enum LeaderboardFilter { today, thisWeek, thisMonth }
 
 /// Provider for leaderboard data source.
 final leaderboardDataSourceProvider = Provider<LeaderboardRemoteDataSource>((ref) {
@@ -14,7 +14,7 @@ final leaderboardDataSourceProvider = Provider<LeaderboardRemoteDataSource>((ref
 
 /// Provider for the selected leaderboard filter.
 final leaderboardFilterProvider =
-    StateProvider<LeaderboardFilter>((ref) => LeaderboardFilter.consistency);
+    StateProvider<LeaderboardFilter>((ref) => LeaderboardFilter.today);
 
 /// Provider for leaderboard data based on filter.
 final leaderboardProvider =
@@ -29,8 +29,6 @@ final leaderboardProvider =
       return Stream.fromFuture(dataSource.getWeeklyLeaderboard());
     case LeaderboardFilter.thisMonth:
       return Stream.fromFuture(dataSource.getMonthlyLeaderboard());
-    case LeaderboardFilter.consistency:
-      return dataSource.getConsistencyLeaderboardStream();
   }
 });
 

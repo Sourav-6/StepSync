@@ -20,6 +20,7 @@ import 'package:step_sync/features/friends/presentation/screens/friends_screen.d
 import 'package:step_sync/features/friends/presentation/screens/friends_leaderboard_screen.dart';
 import 'package:step_sync/features/friends/presentation/screens/invite_friends_screen.dart';
 import 'package:step_sync/features/profile/presentation/screens/my_referrals_screen.dart';
+import 'package:step_sync/features/notifications/presentation/screens/notifications_screen.dart';
 
 /// GoRouter configuration for StepSync navigation.
 final routerProvider = Provider<GoRouter>((ref) {
@@ -113,6 +114,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/friends/invite',
         builder: (context, state) => const InviteFriendsScreen(),
+      ),
+      
+      // ─── Notifications Route ───
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
       ),
     ],
   );

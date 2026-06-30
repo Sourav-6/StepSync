@@ -192,8 +192,6 @@ class LeaderboardScreen extends ConsumerWidget {
         return 'Week';
       case LeaderboardFilter.thisMonth:
         return 'Month';
-      case LeaderboardFilter.consistency:
-        return 'Consistency';
     }
   }
 }
@@ -302,24 +300,23 @@ class _LeaderboardTile extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                if (ref.read(leaderboardFilterProvider) != LeaderboardFilter.consistency)
-                  Builder(
-                    builder: (context) {
-                      final filter = ref.read(leaderboardFilterProvider);
-                      double displayRating = entry.starRating;
-                      if (filter == LeaderboardFilter.thisWeek) {
-                        displayRating = entry.weeklyAvgStarRating;
-                      } else if (filter == LeaderboardFilter.thisMonth) {
-                        displayRating = entry.monthlyAvgStarRating;
-                      }
-                      
-                      return GoldenStarBadge(
-                        rating: displayRating,
-                        fontSize: 12,
-                        iconSize: 12,
-                      );
-                    },
-                  ),
+                Builder(
+                  builder: (context) {
+                    final filter = ref.read(leaderboardFilterProvider);
+                    double displayRating = entry.starRating;
+                    if (filter == LeaderboardFilter.thisWeek) {
+                      displayRating = entry.weeklyAvgStarRating;
+                    } else if (filter == LeaderboardFilter.thisMonth) {
+                      displayRating = entry.monthlyAvgStarRating;
+                    }
+                    
+                    return GoldenStarBadge(
+                      rating: displayRating,
+                      fontSize: 12,
+                      iconSize: 12,
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -328,36 +325,21 @@ class _LeaderboardTile extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (ref.read(leaderboardFilterProvider) == LeaderboardFilter.consistency) ...[
-                GoldenStarBadge(
-                  rating: entry.consistencyScore * 5.0, // Convert 0.0-1.0 to 0.0-5.0 stars
+              Text(
+                Formatters.formatNumber(entry.steps),
+                style: GoogleFonts.outfit(
                   fontSize: 16,
-                  iconSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: isTopThree ? _getRankColor(entry.rank) : AppColors.secondaryTeal,
                 ),
-                Text(
-                  'weekly',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
-                  ),
+              ),
+              Text(
+                'steps',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
                 ),
-              ] else ...[
-                Text(
-                  Formatters.formatNumber(entry.steps),
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: isTopThree ? _getRankColor(entry.rank) : AppColors.secondaryTeal,
-                  ),
-                ),
-                Text(
-                  'steps',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary,
-                  ),
-                ),
-              ]
+              ),
             ],
           ),
         ],

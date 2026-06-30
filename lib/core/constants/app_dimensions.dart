@@ -12,9 +12,9 @@ class AppDimensions {
   static const double xxxl = 64.0;
 
   // ─── Padding ───
-  static const double screenPadding = 20.0;
-  static const double cardPadding = 16.0;
-  static const double sectionSpacing = 24.0;
+  static const double screenPadding = 16.0;
+  static const double cardPadding = 12.0;
+  static const double sectionSpacing = 16.0;
 
   // ─── Border Radius ───
   static const double radiusSm = 8.0;
@@ -36,9 +36,9 @@ class AppDimensions {
   static const double avatarXl = 100.0;
 
   // ─── Progress Ring ───
-  static const double progressRingSize = 220.0;
-  static const double progressRingStroke = 14.0;
-  static const double progressRingBgStroke = 16.0;
+  static const double progressRingSize = 160.0;
+  static const double progressRingStroke = 12.0;
+  static const double progressRingBgStroke = 14.0;
 
   // ─── Bottom Navigation ───
   static const double bottomNavHeight = 72.0;
